@@ -1,0 +1,777 @@
+%{
+//	#include <actiondef.h>
+//	#include <FlexLexer.h>
+	#include <iostream>
+//	#include <fstream>
+	#include <list>
+	#include <algorithm>
+	#include "common.h"
+	//#include "pddlfile.h"
+	
+	int yylex(void);
+	int yyerror(char *);
+	int yyparse(void);
+
+	extern CDomain *dom;
+
+	extern CProblem *prob;
+	
+//	yyFlexLexer lexer;
+//	PDDLFile pddlfile;		
+%}
+
+%union{
+//	RequirementEnum requirement;
+	char str[255];
+	void* pointer;
+	int integer;
+
+	/*if here comes during compilaton error, that the type doesn't exist
+	  than remember, that the include must be not only in this .y file,
+	  but also in .l file.
+	*/
+
+	deque<string>* pstringlist;
+	TypesRecord*	  tr;
+	CTypes*		  ptypes;
+	ParamRecord*	  pr;
+	CParameter*		  pparams;
+	CPredicate*		  ppred;
+	CPredicateList*		  ppredlist;
+	CAction*		  pact;
+	CActionList*		  pactlist;
+
+
+/*	ActionDef* pactiondef;
+	Parameter* pparameter;
+	Predicate* ppredicate;
+	PredicateDef* ppredicatedef;
+	TypedList* ptypedlist;
+	Operator* poperator;
+	OperatorDef* poperatordef;
+	
+	list<Parameter*>* pparameterlist;
+	list<string>* pstringlist;
+	list<Predicate*>* ppredicatelist;
+	list<PredicateDef*>* ppredicatedeflist;
+	list<RequirementEnum>* prequirementlist;
+	list<ActionDef*>* pactiondeflist;
+	list<TypedList*>* ptypedlistlist;
+	list<Object*>* pobjectlist;
+	list<Operator*>* poperatorlist;
+	list<OperatorDefParam*>* poperatordefparamlist;
+	list<OperatorVariable*>* poperatorvariablelist;
+	list<TypeDef*>* ptypedeflist;*/
+};
+
+%token DEFINE
+%token DOMAIN
+%token DDOMAIN 
+%token PROBLEM
+%token ACTION
+%token<str> IDENTIFIER
+%token<str> VARIABLE
+%token PARAMETERS
+%token PRECONDITION
+%token EFFECT
+%token AND
+%token NOT
+%token PREDICATES
+%token TYPES
+%token REQUIREMENTS
+%token<requirement> REQUIREMENT
+%token TOTAL_COST
+%token NUMBER_TYPE
+%token INCREASE
+%token OBJECTS
+%token INIT
+%token GOAL
+%token EITHER
+%token FUNCTIONS
+%token CONSTANTS
+%token<str> NUMBER
+%token METRIC
+%token MINIMIZE
+
+%type<pparams> parameter parameters actparameters
+//%type<pr> 
+%type<ppred> predicatedef operator actioncostatom
+%type<ppredlist> predicatedefs predicatedeflist operators actpreconditions acteffects init goal actioncostlist actioncostdef
+%type<pstringlist> variables identifiers types type operatorvariables
+//%type<poperator> operator
+%type<pact> actiondef
+%type<pactlist> actiondefs
+%type<prequirementlist> requirementlist requirementdefs
+%type<tr> typedlist
+%type<ptypes> typedlists typedefs objectdeclaration constantsdef
+//%type<pobjectlist> objectdeclaration
+//%type<poperatorlist>  /*init goal*/ operators actpreconditions acteffects
+//%type<poperatorvariablelist> operatorvariables
+//%type<ptypedeflist> types type
+
+//%expect 5
+
+%start pddl
+%%
+
+
+pddl
+	: domaindef {}
+	| problemdef {}
+;
+
+
+/*
+domaindef
+	: '(' DEFINE '(' DOMAIN IDENTIFIER ')' requirementdefs typedefs predicatedefs actiondefs ')'{
+		dom->SetName($5);
+		dom->SetTypes($8);
+		dom->SetPredicates($9);
+		dom->SetActions($10);
+	}
+	| '(' DEFINE '(' DOMAIN IDENTIFIER ')' typedefs predicatedefs actiondefs ')'{
+		dom->SetName($5);
+		dom->SetTypes($7);
+		dom->SetPredicates($8);
+		dom->SetActions($9);
+	}
+	| '(' DEFINE '(' DOMAIN IDENTIFIER ')' requirementdefs typedefs predicatedefs actioncostdef actiondefs ')'{
+		dom->SetName($5);
+		dom->SetTypes($8);
+		dom->SetPredicates($9);
+		dom->SetFunctions($10);
+		dom->SetActions($11);
+		dom->SetActionCost(true);
+	}
+	| '(' DEFINE '(' DOMAIN IDENTIFIER ')' requirementdefs predicatedefs actiondefs ')'{
+		dom->SetName($5);
+		//dom->SetTypes($8);
+		CTypes *t = new CTypes();
+		TypesRecord *r=new TypesRecord();
+		r->plistchilds=new deque<string>();
+		r->plistchilds->push_back("object");
+		r->parent="xobject";
+		t->AddRecord(r);
+		dom->SetTypes(t);
+		dom->SetPredicates($8);
+		dom->SetActions($9);
+	}
+	| '(' DEFINE '(' DOMAIN IDENTIFIER ')' predicatedefs actiondefs ')'{
+		dom->SetName($5);
+		//dom->SetTypes($7);
+		CTypes *t = new CTypes();
+		TypesRecord *r=new TypesRecord();
+		r->plistchilds=new deque<string>(1,"object");
+		r->parent="xobject";
+		t->AddRecord(r);
+		dom->SetTypes(t);
+		dom->SetPredicates($7);
+		dom->SetActions($8);
+	}
+	| '(' DEFINE '(' DOMAIN IDENTIFIER ')' requirementdefs predicatedefs actioncostdef actiondefs ')'{
+		dom->SetName($5);
+		//dom->SetTypes($8);
+		CTypes *t = new CTypes();
+		TypesRecord *r=new TypesRecord();
+		r->plistchilds=new deque<string>();
+		r->plistchilds->push_back("object");
+		r->parent="xobject";
+		t->AddRecord(r);
+		dom->SetTypes(t);
+		dom->SetPredicates($8);
+		dom->SetFunctions($9);
+		dom->SetActions($10);
+		dom->SetActionCost(true);
+	}
+	| '(' DEFINE '(' DOMAIN IDENTIFIER ')' predicatedefs actioncostdef actiondefs ')'{
+		dom->SetName($5);
+		//dom->SetTypes($7);
+		CTypes *t = new CTypes();
+		TypesRecord *r=new TypesRecord();
+		r->plistchilds=new deque<string>();
+		r->plistchilds->push_back("object");
+		r->parent="xobject";
+		t->AddRecord(r);
+		dom->SetTypes(t);
+		dom->SetPredicates($7);
+		dom->SetFunctions($8);
+		dom->SetActions($9);
+		dom->SetActionCost(true);
+	}
+*/
+
+domaindef
+	: domainhead envpart actiondefs ')'
+	{
+	   dom->SetActions($3);
+	}
+        | domainhead envpart actioncostdef actiondefs ')'
+	{
+	   dom->SetFunctions($3);
+	   dom->SetActions($4);
+	   dom->SetActionCost(true);
+	}
+	
+domainhead
+        : '(' DEFINE '(' DOMAIN IDENTIFIER ')' 
+        {
+            dom->SetName($5);
+        }
+    
+        
+envpart
+       : predicatedefs
+       {
+        CTypes *t = new CTypes();
+		TypesRecord *r=new TypesRecord();
+		r->plistchilds=new deque<string>();
+		r->plistchilds->push_back("object");
+		r->parent="xobject";
+		t->AddRecord(r);
+		dom->SetTypes(t);
+		dom->SetPredicates($1);
+       }
+       | requirementdefs predicatedefs
+       {
+        CTypes *t = new CTypes();
+		TypesRecord *r=new TypesRecord();
+		r->plistchilds=new deque<string>();
+		r->plistchilds->push_back("object");
+		r->parent="xobject";
+		t->AddRecord(r);
+		dom->SetTypes(t);
+		dom->SetPredicates($2);
+       }
+       | requirementdefs typedefs predicatedefs
+       {
+        dom->SetTypes($2);
+        dom->SetPredicates($3);
+       }
+       | requirementdefs typedefs constantsdef predicatedefs
+       {
+        dom->SetTypes($2);
+        dom->SetConstants($3);
+        dom->SetPredicates($4);
+       }
+       | typedefs predicatedefs
+       {
+        dom->SetTypes($1);
+        dom->SetPredicates($2);
+       }
+       | typedefs constantsdef predicatedefs
+       {
+        dom->SetTypes($1);
+        dom->SetConstants($2);
+        dom->SetPredicates($3);
+       }
+
+
+problemdef
+	: '(' DEFINE '(' PROBLEM IDENTIFIER ')' '(' DDOMAIN  IDENTIFIER ')' requirementdefs objectdeclaration init goal ')' {
+		prob->SetName($5);
+		prob->SetObjects($12);
+		prob->SetInit($13);
+		prob->SetGoal($14);
+	}
+	| '(' DEFINE '(' PROBLEM IDENTIFIER ')' '(' DDOMAIN  IDENTIFIER ')' objectdeclaration init goal ')' {
+		prob->SetName($5);
+		prob->SetObjects($11);
+		prob->SetInit($12);
+		prob->SetGoal($13);
+	}
+	| '(' DEFINE '(' PROBLEM IDENTIFIER ')' '(' DDOMAIN  IDENTIFIER ')' requirementdefs objectdeclaration init goal metric ')' {
+		prob->SetName($5);
+		prob->SetObjects($12);
+		prob->SetInit($13);
+		prob->SetGoal($14);
+	}
+	| '(' DEFINE '(' PROBLEM IDENTIFIER ')' '(' DDOMAIN  IDENTIFIER ')' objectdeclaration init goal metric ')' {
+		prob->SetName($5);
+		prob->SetObjects($11);
+		prob->SetInit($12);
+		prob->SetGoal($13);	
+	}	
+;
+
+
+metric
+	: '(' METRIC MINIMIZE '(' TOTAL_COST ')' ')' {
+		
+	}
+;
+
+goal
+	: '(' GOAL '(' AND operators ')' ')' {
+		$$=$5;
+	}
+	| '(' GOAL operators ')' {
+		$$=$3;
+	}
+;
+
+init
+	: '(' INIT operators ')' {
+		$$=$3;
+	}
+;
+
+objectdeclaration
+	: '(' OBJECTS typedlists ')' {
+		$$=$3;
+	}
+;
+
+constantsdef
+      : '(' CONSTANTS typedlists ')' {
+		$$=$3;
+	}
+;
+
+requirementdefs
+	: '(' REQUIREMENTS requirementlist')' { /* $$=$3; */}
+;
+
+requirementlist
+	: REQUIREMENT {
+
+	}
+	| requirementlist REQUIREMENT {
+
+	}
+;
+
+/*todo: typedefs could be optional*/
+typedefs
+	: '(' TYPES typedlists ')' {
+		$$=$3;
+	}	
+;
+
+typedlists
+	: typedlist {
+		$$=new CTypes();
+		$$->AddRecord($1);
+	}
+	| typedlists typedlist {
+		$1->AddRecord($2);
+		$$=$1;
+	}
+;
+
+typedlist
+	: identifiers '-' IDENTIFIER {	
+		$$=new TypesRecord();
+		$$->plistchilds=$1;
+		$$->parent=$3;
+	}
+	| identifiers {
+		$$=new TypesRecord();
+		$$->plistchilds=$1;
+		$$->parent=find($1->begin(),$1->end(),"object")==$1->end() ? "object" : "xobject";  //object is a default value if no parent defined
+	}
+	
+;
+
+/*todo: implement constants (see PDDL Syntax)*/
+
+identifiers
+	: IDENTIFIER {
+		$$=new deque<string>();
+		$$->push_back($1);
+	}
+	| identifiers IDENTIFIER {
+		$1->push_back($2);
+		$$=$1;
+	}
+;
+
+predicatedefs
+	: '(' PREDICATES predicatedeflist ')' {
+		$$=$3;
+	}
+;
+
+predicatedeflist
+	: predicatedef {
+		$$=new CPredicateList();
+		$$->AddRecord($1);
+	}
+	| predicatedeflist predicatedef {
+		$$=$1;
+		$$->AddRecord($2);
+	}
+;
+
+predicatedef
+	: '(' IDENTIFIER parameters ')'{
+		$$=new CPredicate($2,$3);
+	}
+	| '(' IDENTIFIER ')'{
+		$$=new CPredicate($2,new CParameter());
+	}
+;
+
+actioncostdef
+	: '(' FUNCTIONS actioncostlist ')' {
+	   $$=$3;
+	} 
+
+;	
+
+actioncostlist
+	: actioncostatom {
+	    $$=new CPredicateList();
+	    $$->AddRecord($1);
+	}
+	| actioncostlist actioncostatom {
+	    $$=$1;
+	    $$->AddRecord($2);
+	}
+;
+actioncostatom
+        : '(' TOTAL_COST ')' '-' NUMBER_TYPE {
+	    $$=new CPredicate("total-cost",new CParameter());
+        }
+        | '(' TOTAL_COST ')' {
+	    $$=new CPredicate("total-cost",new CParameter());
+        }
+        |  predicatedef '-' NUMBER_TYPE {
+	    $$=$1;
+        }
+        | predicatedef {
+	    $$=$1;
+        }
+        
+;
+/*
+functiondefs
+	: '(' FUNCTIONS functiondeflist ')' {
+		clog << "rule functiondefs:\n\t" << endl;
+	}
+;
+
+functiondeflist
+	: functiondef {
+		clog << "rule functiondefs(0):\n\t" << endl;
+	}
+	| functiondeflist functiondef {
+		clog << "rule functiondefs(1):\n\t" << endl;
+	}
+;
+
+functiondef
+	: '(' IDENTIFIER parameters ')'{
+		list<TypeDef*> typedefs;
+		typedefs.push_back(pddlfile.GetTypeDefByName(DEFAULT_FUNCTIONTYPE));
+			
+		FunctionDef* fd = new FunctionDef($2, $3, &typedefs);		
+		pddlfile.AddFunctionDef(fd);
+		clog << "rule functiondef:\n\tfunctiondef " << $2 << " found" << endl;
+	}
+	| '(' IDENTIFIER ')'{
+		list<TypeDef*> typedefs;
+		typedefs.push_back(pddlfile.GetTypeDefByName(DEFAULT_FUNCTIONTYPE));
+		
+		FunctionDef* fd = new FunctionDef($2, NULL, &typedefs);		
+		pddlfile.AddFunctionDef(fd);
+		clog << "rule functiondef:\n\tfunctiondef " << $2 << " found" << endl;	
+	}
+	| '(' IDENTIFIER parameters ')' '-'	types {
+		FunctionDef* fd = new FunctionDef($2, $3, $6);		
+		pddlfile.AddFunctionDef(fd);
+		clog << "rule functiondef:\n\tfunctiondef " << $2 << " found" << endl;	
+	}
+	| '(' IDENTIFIER ')' '-'	types {	
+		FunctionDef* fd = new FunctionDef($2, NULL, $5);		
+		pddlfile.AddFunctionDef(fd);
+		clog << "rule functiondef:\n\tfunctiondef " << $2 << " found" << endl;	
+	}		 
+;
+
+*/
+
+actiondefs
+	: actiondef {
+		$$=new CActionList();
+		$$->AddRecord($1);
+	}
+	| actiondefs actiondef {
+		$$=$1;
+		$$->AddRecord($2);	
+	}
+;
+
+/* adds found action into the pddlfile */
+actiondef
+	: '(' ACTION IDENTIFIER actparameters actpreconditions acteffects ')' {
+		$$=new CAction($3,$4,$5,$6);
+	}
+	|  '(' ACTION IDENTIFIER actparameters acteffects ')' {
+		$$=new CAction($3,$4,NULL,$5);	
+	}
+;
+
+/*returns pointer to the list of parameters (type list<Parameter*>*) */
+actparameters
+	: PARAMETERS '(' parameters ')' {
+		$$=$3;
+	}
+;
+
+
+/*returns pointer to the list of operators (type list<Predicate*>*) */
+actpreconditions
+	: PRECONDITION operator {
+	        $$=new CPredicateList();
+		$$->AddRecord($2);
+	}
+	| PRECONDITION '(' AND operators ')' {
+		$$=$4;
+	}
+	
+; 
+
+/*returns pointer to the list of operators (type list<Operator*>*) */
+acteffects
+	: EFFECT operator {
+		$$=new CPredicateList();
+		$$->AddRecord($2);
+		
+	}
+	| EFFECT '(' AND operators ')' {
+		$$=$4;
+	}
+; 
+
+
+/*returns pointer to the list of parameters (type list<parameter=*>*) */
+parameters
+	: parameter {
+		$$=$1;
+	}
+	| parameters parameter {
+		*($1)+=*($2);
+		$$=$1;
+	}
+	| variables {
+		ParamRecord *ppr;
+		CParameter *pcparam;
+		string s;
+		
+		pcparam=new CParameter();
+
+		while(!$1->empty()){
+			s=$1->front();
+			ppr=new ParamRecord;
+			ppr->name=s.substr(1);
+			ppr->plisttypes=new deque<string>(1,"object");	
+			pcparam->AddRecord(ppr);
+			$1->pop_front();
+		}
+		$$=pcparam;
+	}
+;
+
+parameter
+	: variables '-' types {
+		ParamRecord *ppr;
+		CParameter *pcparam;
+		string s;
+		
+		pcparam=new CParameter();
+
+		while(!$1->empty()){
+			s=$1->front();
+			ppr=new ParamRecord;
+			ppr->name=s.substr(1);
+			ppr->plisttypes=$3;	
+			pcparam->AddRecord(ppr);
+			$1->pop_front();
+		}
+		$$=pcparam;
+	}	
+;
+
+types
+	: type {
+		$$=$1;
+	}
+	| types type {
+		string s;
+		$$=$1;
+		while (!$2->empty()){
+			s=$2->front();
+			$$->push_back(s);
+			$2->pop_front();
+		}
+	}
+;
+
+type 
+	: IDENTIFIER {
+		$$=new deque<string>();
+		$$->push_back($1);
+		
+	}
+	| '(' EITHER identifiers ')' {
+		$$=$3;
+	}
+;
+
+/*returns pointer to the list of operators (type list<Operator*>*) */
+operators
+	: operator {
+		$$=new CPredicateList();
+		$$->AddRecord($1);
+	}
+	| operators operator {
+		$$=$1;
+		$$->AddRecord($2);
+	}
+;
+
+/*returns pointer to the operator (type Operator*)*/
+operator
+	: '(' IDENTIFIER operatorvariables ')' { //example: (lifting ?x ?y) (carry hand ?x) (at truck0 distributor1) ...
+		CParameter *pars;
+		pars=new CParameter($3);
+		$$=new CPredicate($2,pars);
+	}
+/*	| '(' IDENTIFIER identifiers ')' { 
+		CParameter *pars;
+		pars=new CParameter($3,true);
+		$$=new CPredicate($2,pars);
+	}	*/	
+	| '(' IDENTIFIER ')'{
+		CParameter *pars;
+		pars=new CParameter();
+		$$=new CPredicate($2,pars);		
+	}
+	| '(' NOT operator ')' {
+		$$=$3;
+		$$->Negate();
+	}
+	| '(' INCREASE '(' TOTAL_COST ')' '(' IDENTIFIER operatorvariables ')' ')'{
+	       CParameter *p=new CParameter($8);
+	       CPredicate *tmp=new CPredicate($7,p);
+	       CParameter *pars;
+	       deque<string> x;
+	       x.push_back(tmp->ToString(false));
+		pars=new CParameter(&x,true);
+		$$=new CPredicate("total-cost",pars);	
+	}
+	| '(' INCREASE '(' TOTAL_COST ')' NUMBER ')'{
+	       CParameter *pars;
+	       deque<string> x;
+	       x.push_back($6);
+		pars=new CParameter(&x,true);
+		$$=new CPredicate("total-cost",pars);	
+	}
+	| '(' IDENTIFIER '(' TOTAL_COST ')' NUMBER ')'{
+	      $$=NULL;	
+	}
+	| '(' IDENTIFIER '(' identifiers ')' NUMBER ')'{
+	     CParameter *pars;
+	     
+	     $4->push_front("(");
+	     $4->push_back(")");
+	     $4->push_back($6);
+	     pars=new CParameter($4,true);
+	     $$=new CPredicate($2,pars);
+	}
+;
+
+/*returns pointer to the list of OperatoVariable*/
+operatorvariables
+	: VARIABLE {
+		string s=$1;
+		//s=$1;
+		//s=s.substr(1);
+		$$=new deque<string>();
+		$$->push_back(s);
+	}
+	| IDENTIFIER {
+	        $$=new deque<string>();
+		$$->push_back($1);
+	}
+	| operatorvariables VARIABLE {
+	        string s=$2;
+		//s=$2;
+		//s=s.substr(1);
+		$1->push_back(s);
+		$$=$1;
+	}
+	| operatorvariables IDENTIFIER {
+	       $1->push_back($2);
+		$$=$1;
+	}
+
+/*	| operator {
+	
+	}
+	| NUMBER {
+						
+	}	
+	| operatorvariables operator {
+		
+	}
+	| operatorvariables variables {
+					
+	}
+	| operatorvariables NUMBER {
+			
+	}	*/
+;
+
+/*returns pointer to the list of variables (type list<string>*), example: ?x ?y ?z */
+variables
+	: VARIABLE {
+		string s=$1;
+		//s=$1;
+		//s=s.substr(1);
+		$$=new deque<string>();
+		$$->push_back(s);
+	}
+	| variables VARIABLE {
+		string s=$2;
+		//s=$2;
+		//s=s.substr(1);
+		$1->push_back(s);
+		$$=$1;
+	}
+;
+
+%%
+
+int yyerror(char *chybka)
+{
+  	printf("%s\n", chybka);
+  	return 0;
+}
+
+extern int yylex(void);
+
+/*
+int main (int argc, char **argv)
+{
+	ofstream out("pddlconvertor.log");
+	streambuf* oldclog;
+	
+	if (out){
+		oldclog = clog.rdbuf();
+		clog.rdbuf(out.rdbuf());	
+	}
+	
+  	yyparse();
+//  	pddlfile.OutputTo(cout);
+
+  	pddlfile.OutputToGrounded(cout);
+  	
+  	if (out){
+  		clog.rdbuf(oldclog);
+  	}
+  	
+  	return 0;
+}
+*/
+

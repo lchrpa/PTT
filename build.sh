@@ -1,6 +1,6 @@
 #!/bin/bash
 
 make clean
-cmake src -DCMAKE_BUILD_TYPE=Release
+cmake PTT -DCMAKE_BUILD_TYPE=Release
 make
 

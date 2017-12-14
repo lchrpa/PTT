@@ -37,7 +37,7 @@ void init(){
 	data.par_a=data.par_b= 1.0f;
 	data.par_c=5;
 	data.optimization=data.goal=data.inv=data.grinv=data.repl = data.entanglements = data.init = data.prec = data.succ = false;
-	data.macroentanglements=data.macros=0;
+	data.macroentanglements=data.macros=data.macrosx=0;
 	data.stats=false;
 
   
@@ -199,6 +199,9 @@ void parse_input(string fname){
 		if(s.find("macros=",0)==0){ //it's for KER macros
 			sscanf(s.data(),"macros=%f %f %i",&data.par_a,&data.par_b,&data.par_c);
 			data.macros=1;
+		}
+		if(s.find("macrosx=",0)==0){ //other macro learning techniques
+		        sscanf(s.data(),"macrosx=%i",&data.macrosx);
 		}
 		if(s.find("externmacros=",0)==0){//macros are in the external file
 			parseKF(s.substr(13));
@@ -544,6 +547,10 @@ int main(int argc, char** argv){
 			ProblemsToPDDL();
 		    }
 		
+		}
+		if (data.macrosx==1){ //"mutex" macros
+		   data.pdom->IdentifyIncomaptiblePredicates();
+		   data.pdom->OutIncompatiblePreds(cout);
 		}
 		}
 	}

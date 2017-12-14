@@ -75,7 +75,7 @@ struct PTT_Data{ //contains planning domain, all training planning problems and 
 	bool optimization;
 	bool goal,inv,grinv,repl;
 	bool entanglements,macros;
-	int macroentanglements;
+	int macroentanglements,macrosx;
 	bool init, prec, succ;
 	float par_a,par_b;
 	int par_c;

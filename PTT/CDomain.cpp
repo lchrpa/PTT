@@ -205,6 +205,19 @@ void CDomain::IdentifyIncomaptiblePredicates()
   
 }
 
+void CDomain::OutIncompatiblePreds(ostream& s)
+{
+  int n=GetPredicates()->Count();
+  for (int i=0;i<n;i++){
+    for (int j=i+1;j<n;j++){
+      if (incompatible_preds[i*n+j].first==1)
+	s << (*ppreds)[i]->GetName() << " mutex with " << (*ppreds)[j]->GetName() <<endl;
+    }
+  }
+
+}
+
+
 bool CDomain::AreCompatible(CPredicate* p1, CPredicate* p2)
 {
      int k1 = ppreds->FindProperPredicate(p1->GetName());

@@ -93,6 +93,7 @@ public:
 	void InitializeReplMatrix(void);
 	bool ReplacableBy(CAction* a1, CAction* a2, vector<sh_arg_str>& sh_args, repl_matrix_field &ret);
 	void IdentifyIncomaptiblePredicates();
+	void OutIncompatiblePreds(ostream &s);
 	bool AreCompatible(CPredicate *p1,CPredicate *p2);
 	void GeneratePDDL(ostream& s);
 	void ReformulateByEntanglements(CPredicateList* ent_init, CPredicateList* ent_goal);

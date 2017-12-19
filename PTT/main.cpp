@@ -550,7 +550,9 @@ int main(int argc, char** argv){
 		}
 		if (data.macrosx==1){ //"mutex" macros
 		   data.pdom->IdentifyIncomaptiblePredicates();
-		   data.pdom->OutIncompatiblePreds(cout);
+		   //data.pdom->OutIncompatiblePreds(cout);
+		   data.pdom->GetFlippingData();
+		   data.pdom->OutFlippingData(cout);
 		}
 		}
 	}

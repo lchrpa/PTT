@@ -42,6 +42,14 @@ bool repl;
 
 };
 
+struct flipping_data {
+  CPredicate *p1,*p2;
+  vector<CAction*> starting;
+  vector<CAction*> finishing;
+  
+  vector<sh_arg_str> *shared_args;
+};
+
 typedef pair<string, vector<short> > act;
 typedef pair<act*,vector<act*> > mcr;
 
@@ -58,6 +66,7 @@ private:
 	inv_matrix_field *inv_matrix;
 	repl_matrix_field *repl_matrix;
 	vector<pair<short,vector<sh_arg_str>* > > incompatible_preds;
+	vector<flipping_data> flipping;
 	void MergePredTypes(CPredicateList*);
 	bool action_cost;
 	int initial_inv_count,initial_pred_count;
@@ -95,6 +104,8 @@ public:
 	void IdentifyIncomaptiblePredicates();
 	void OutIncompatiblePreds(ostream &s);
 	bool AreCompatible(CPredicate *p1,CPredicate *p2);
+	void GetFlippingData();
+	void OutFlippingData(ostream &s);
 	void GeneratePDDL(ostream& s);
 	void ReformulateByEntanglements(CPredicateList* ent_init, CPredicateList* ent_goal);
 	void ReformulateByInnerEntanglements(CPredicateList* ent_prev, CPredicateList* ent_succ);

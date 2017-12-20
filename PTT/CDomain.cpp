@@ -246,14 +246,16 @@ void CDomain::GetFlippingData()
 	  CPredicate* tmp_p2 = ((*ppreds)[i]->GetPars()->Count() > (*ppreds)[j]->GetPars()->Count()) ? (*ppreds)[i] : (*ppreds)[j];
 	  if (tmp_p1->GetPars()->Count() == incompatible_preds[i*n+j].second->size()){//thesecond predicate must "extend" the first one
 	      flipping_data *tmpdata = new flipping_data();
+	      tmpdata->starting=new CActionList();
+	      tmpdata->finishing=new CActionList();
 	      tmpdata->p1=tmp_p1;
 	      tmpdata->p2=tmp_p2;
 	      tmpdata->shared_args=incompatible_preds[i*n+j].second;
 	      for (int k=0; k<pacts->Count();k++){
-		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p1->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p2->GetName())!=-1) tmpdata->starting.push_back((*pacts)[k]);
-		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p2->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p1->GetName())!=-1) tmpdata->finishing.push_back((*pacts)[k]);
+		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p1->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p2->GetName())!=-1) tmpdata->starting->AddRecord((*pacts)[k]);
+		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p2->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p1->GetName())!=-1) tmpdata->finishing->AddRecord((*pacts)[k]);
 	      }
-	      if (!tmpdata->starting.empty() && !tmpdata->finishing.empty()){//no "flipping" actions nothing to connect
+	      if (!tmpdata->starting->Count()==0 && !tmpdata->finishing->Count()==0){//no "flipping" actions nothing to connect
 	      
 	           flipping.push_back((*tmpdata));
 	      }
@@ -261,7 +263,7 @@ void CDomain::GetFlippingData()
 	}
       }
     }
-    
+    flipping_iter=flipping.begin();
 }
 
 void CDomain::OutFlippingData(ostream& s)
@@ -269,10 +271,10 @@ void CDomain::OutFlippingData(ostream& s)
    for (vector<flipping_data>::iterator it=flipping.begin();it!=flipping.end();it++){
       s << it->p1->ToString(false) << " - flips with - " << it->p2->ToString(false) << endl;
       s << "Actions start the flip: ";
-      for (vector<CAction*>::iterator it2=it->starting.begin();it2!=it->starting.end();it2++) s << (*it2)->GetActName() << " ";
+      for (int i=0;i<it->starting->Count();i++) s << (*it->starting)[i]->GetActName() << " ";
       s << endl;
       s << "Actions finish the flip: ";
-      for (vector<CAction*>::iterator it2=it->finishing.begin();it2!=it->finishing.end();it2++) s << (*it2)->GetActName() << " ";
+      for (int i=0;i<it->finishing->Count();i++) s << (*it->finishing)[i]->GetActName() << " ";
       s << endl;
    }
   

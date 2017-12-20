@@ -580,7 +580,7 @@ CPredicateList* CPredicateList::Clone() const
 	return ret;
 }
 
-bool CPredicateList::Disjunct(CPredicateList *pl)
+bool CPredicateList::Disjunct(CPredicateList *pl)//for lists of grounded predicates
 {
 	int i,j;
 

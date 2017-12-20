@@ -522,6 +522,16 @@ bool CAction::AchieverFor(CAction* a, CTypes *t, vector< vector< sh_arg_str > >&
   return true;
 }
 
+bool CAction::IndependentWith(CAction* a)
+{
+  if (!negEffects->Disjunct(a->GetPosEff())) return false;
+  if (!negEffects->Disjunct(a->GetPrec())) return false;
+  if (!posEffects->Disjunct(a->GetNegEff())) return false;
+  if (!precondition->Disjunct(a->GetNegEff())) return false;
+  return true;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////
 // CMacroAction Class

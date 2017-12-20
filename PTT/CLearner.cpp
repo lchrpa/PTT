@@ -1854,6 +1854,52 @@ void CLearner::EliminateUselessMacros()
   
 }
 
+void CLearner::LearnMacrosFromFlips()
+{
+  flipping_data *rec;
+  data.pdom->IdentifyIncomaptiblePredicates();
+  data.pdom->GetFlippingData();
+  data.pdom->OutFlippingData(cout); //debug reasons
+  while( (rec=data.pdom->NextFlippingItem()) != NULL){
+      for (deque<CProblem*>::iterator it_prob=data.train->begin();it_prob!=data.train->end();it_prob++){
+	  CPlan *plan = (*it_prob)->GetPlan();
+	  for (int i=0;i<plan->Length();i++){
+	     int s;
+	     if (rec->starting->FindProperAction((*plan)[i]->GetActName(),s)!=NULL){
+	        CPredicate *ref_pred = (*(*plan)[i]->GetPosEff())[(*plan)[i]->GetPosEff()->FindProperPredicate(rec->p2->GetName())];
+		cout << "Flipped predicate: " << ref_pred->ToString(false) << endl; //debug reasons
+		
+		CAction *ref_act = (*plan)[i];
+		int j=i+1;
+		bool closed = false;
+		while (!closed && j<plan->Length()){
+		  if (rec->finishing->FindProperAction((*plan)[j]->GetActName(),s)!=NULL && (*plan)[j]->GetNegEff()->Find(ref_pred)!=-1){ //the "closing action is found
+		    closed=true;
+		  }
+		  if (closed || (*plan)[j]->GetPrec()->Find(ref_pred)!=-1 || !ref_act->IndependentWith((*plan)[j])){
+		    vector<sh_arg_str> *sh_args=new vector<sh_arg_str>();
+		    ref_act->DetectSharedArgs((*plan)[j],*sh_args);
+		    ref_act = new CMacroAction(ref_act,(*plan)[j],*sh_args);
+		  }
+		  j++;
+		}
+		if (closed) {
+		  cout << "Macro: " << ref_act->GetActName() << ref_act->GetParams()->ToString(false) << endl;//debug reasons 
+		  
+		}
+	     }
+	  }
+	
+      }    
+  }
+  
+  
+}
+
+
+/////////////////////////////////////////////////////////
+// Plan similarity part
+////////////////////////////////////////////////////////
 void CLearner::MakeAchieverClasses(vector< achievers > *achs_arr , vector< std::vector< int > > *achs_classes)
 {
     bool found;

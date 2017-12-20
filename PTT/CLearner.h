@@ -109,6 +109,8 @@ public:
 	void GuessMacros();
 	
 	void EliminateUselessMacros();
+
+        void LearnMacrosFromFlips();
 	
 	void CreateStats();
 	void OutputAchievers(vector<achievers> &achs,ostream &s);

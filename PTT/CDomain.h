@@ -44,8 +44,8 @@ bool repl;
 
 struct flipping_data {
   CPredicate *p1,*p2;
-  vector<CAction*> starting;
-  vector<CAction*> finishing;
+  CActionList *starting;
+  CActionList *finishing;
   
   vector<sh_arg_str> *shared_args;
 };
@@ -67,6 +67,7 @@ private:
 	repl_matrix_field *repl_matrix;
 	vector<pair<short,vector<sh_arg_str>* > > incompatible_preds;
 	vector<flipping_data> flipping;
+	vector<flipping_data>::iterator flipping_iter;
 	void MergePredTypes(CPredicateList*);
 	bool action_cost;
 	int initial_inv_count,initial_pred_count;
@@ -105,6 +106,8 @@ public:
 	void OutIncompatiblePreds(ostream &s);
 	bool AreCompatible(CPredicate *p1,CPredicate *p2);
 	void GetFlippingData();
+	inline flipping_data* NextFlippingItem(){if (flipping_iter!=flipping.end()) return &(*(flipping_iter++)); else return NULL;}
+	inline void ResetFlippingItem(){flipping_iter=flipping.begin();}
 	void OutFlippingData(ostream &s);
 	void GeneratePDDL(ostream& s);
 	void ReformulateByEntanglements(CPredicateList* ent_init, CPredicateList* ent_goal);

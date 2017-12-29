@@ -259,6 +259,23 @@ bool CAction::ReplacableBy(CAction* o, vector<sh_arg_str>& sh_args)
 	return true;
 }
 
+bool CAction::Equal(CAction* a)
+{
+       if (strcasecmp(this->name.data(),a->GetActName().data())!=0) return false;
+       if (this->params->Count()!=a->GetParams()->Count()) return false;
+       
+       vector<sh_arg_str> sh_args;
+       
+       if (this->ReplacableBy(a,sh_args)){
+	 //cout << "equal: " << a->GetActName() << "   " << sh_args.size() << " " << params->Count() << endl; //debug reasons 
+	 //return sh_args.size()==params->Count();
+	 return true;
+       }
+       
+       return false;
+}
+
+
 string CAction::ToString(void)
 {
 	string ret;

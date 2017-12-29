@@ -56,6 +56,7 @@ protected:
 public:
 	bool InverseOps(CAction* o, vector<sh_arg_str>& sh_args);
 	bool ReplacableBy(CAction* o, vector<sh_arg_str>& sh_args);
+	bool Equal(CAction *a);
 	virtual string ToString(void);
 	virtual inline bool isMacro(){return false;}
 	void MakeIndirectEffects(void);
@@ -66,6 +67,7 @@ public:
 	inline int GetActionCost(){return cost;}
 	bool AchieverFor(CAction *a, CTypes *t, vector<vector<sh_arg_str> >& sh_args_vec,bool stat = true);
 	bool IndependentWith(CAction *a); //works for grounded actions (planning graph independence)
+	inline bool AchieverForGnd(CAction *a){return !posEffects->Disjunct(a->GetPrec());} //works for grounded actions
 protected:
 	void MakeAllInstancesRec(vector<deque<string>*>* obj_list, CParameter* par_parts, int arg_no, CProblem* prob, bool ents, CActionList* ret);
 	bool CheckInstance(CProblem* prob, bool ents);

@@ -1856,6 +1856,7 @@ void CLearner::EliminateUselessMacros()
 
 void CLearner::LearnMacrosFromFlips()
 {
+  vector<pair<CAction*,int> > sugg_macros;
   flipping_data *rec;
   data.pdom->IdentifyIncomaptiblePredicates();
   data.pdom->GetFlippingData();
@@ -1867,25 +1868,90 @@ void CLearner::LearnMacrosFromFlips()
 	     int s;
 	     if (rec->starting->FindProperAction((*plan)[i]->GetActName(),s)!=NULL){
 	        CPredicate *ref_pred = (*(*plan)[i]->GetPosEff())[(*plan)[i]->GetPosEff()->FindProperPredicate(rec->p2->GetName())];
-		cout << "Flipped predicate: " << ref_pred->ToString(false) << endl; //debug reasons
+		CAction *macro=(*rec->starting)[s];
+		if (rec->finishing->FindProperAction((*plan)[i]->GetActName(),s)!=NULL && (*plan)[i]->GetNegEff()->Find(ref_pred)!=-1) continue; //starting and finishing action is the same
+		//cout << "Flipped predicate: " << ref_pred->ToString(false) << endl; //debug reasons
 		
 		CAction *ref_act = (*plan)[i];
+		vector<int> in_ma;
+		deque<int> out_ma;
+		in_ma.push_back(i);
 		int j=i+1;
 		bool closed = false;
 		while (!closed && j<plan->Length()){
 		  if (rec->finishing->FindProperAction((*plan)[j]->GetActName(),s)!=NULL && (*plan)[j]->GetNegEff()->Find(ref_pred)!=-1){ //the "closing action is found
 		    closed=true;
 		  }
-		  if (closed || (*plan)[j]->GetPrec()->Find(ref_pred)!=-1 || !ref_act->IndependentWith((*plan)[j])){
-		    vector<sh_arg_str> *sh_args=new vector<sh_arg_str>();
-		    ref_act->DetectSharedArgs((*plan)[j],*sh_args);
-		    ref_act = new CMacroAction(ref_act,(*plan)[j],*sh_args);
+		  if (closed || (*plan)[j]->GetPrec()->Find(ref_pred)!=-1 /*|| !ref_act->IndependentWith((*plan)[j])*/){
+		    //vector<sh_arg_str> *sh_args=new vector<sh_arg_str>();
+		    //ref_act->DetectSharedArgs((*plan)[j],*sh_args);
+		    //ref_act = new CMacroAction(ref_act,(*plan)[j],*sh_args);
+		    in_ma.push_back(j);
+		    
+		  } else {
+		    out_ma.push_back(j); 
 		  }
 		  j++;
 		}
 		if (closed) {
-		  cout << "Macro: " << ref_act->GetActName() << ref_act->GetParams()->ToString(false) << endl;//debug reasons 
+		  bool independent=true;
+		  while (independent && !out_ma.empty()) {//upwards
+		      vector<int>::iterator it_out=in_ma.begin(); 
+		      while (*it_out < out_ma.front() && independent){
+		         independent=(*plan)[out_ma.front()]->IndependentWith((*plan)[*it_out]) && !(*plan)[*it_out]->AchieverForGnd((*plan)[out_ma.front()]);
+			 it_out++;
+		      }
+		      if (independent) out_ma.pop_front(); 
+		  }
+		  independent=true;
+		  while (independent && !out_ma.empty()) {//downwards
+		      vector<int>::reverse_iterator it_out=in_ma.rbegin(); 
+		      while (*it_out > out_ma.back() && independent){
+		         independent=(*plan)[out_ma.back()]->IndependentWith((*plan)[*it_out])  && !(*plan)[out_ma.back()]->AchieverForGnd((*plan)[*it_out]);
+			 it_out++;
+		      }
+		      if (independent) out_ma.pop_back(); 
+		  }
 		  
+		  vector<int> fin(in_ma.size()+out_ma.size());
+		  
+		  merge(in_ma.begin(),in_ma.end(),out_ma.begin(),out_ma.end(),fin.begin());
+		  
+		  for (vector<int>::iterator it_in=++fin.begin();it_in!=fin.end();it_in++){
+		      vector<sh_arg_str> *sh_args=new vector<sh_arg_str>();
+		      ref_act->DetectSharedArgs((*plan)[*it_in],*sh_args);
+		      ref_act = new CMacroAction(ref_act,(*plan)[*it_in],*sh_args);
+		      data.pdom->GetActions()->FindProperAction((*plan)[*it_in]->GetActName(),s);
+		      macro= new CMacroAction(macro,(*data.pdom->GetActions())[s],*sh_args);
+		  }
+		   
+		  //cout << "Macro: " << macro->GetActName() << macro->GetParams()->ToString(true) << endl;//debug reasons 
+		  
+		  for (int k=0;k<ref_act->GetPosEff()->Count();k++){
+		     if ((*it_prob)->GetGoal()->Find((*ref_act->GetPosEff())[k])!=-1){
+		    //    cout << "goal achiever: " <<  (*ref_act->GetPosEff())[k]->ToString(false) << endl; //debug reasons
+		        string st="stag_";
+			(*macro->GetPosEff())[k]->SetEntanglement(true);
+		        CPredicate *tmp = (*macro->GetPosEff())[k]->Clone();
+			tmp->SetName(st+tmp->GetName());
+			tmp->SetStatic(true);
+			macro->GetPrec()->AddRecord(tmp);
+			//if (!ent_goal->Subsume((*tmplist)[j], data.pdom->GetTypes())){
+			//	ent_goal->AddRecord((*tmplist)[j]->Clone());
+			//}
+		     }
+		     
+		  }
+		  
+		  bool found=false;
+		  vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
+		  while (!found && mit !=sugg_macros.end()){
+		    if (mit->first->Equal(macro)){found=true;mit->second++;}
+		    mit++; 
+		  }
+		  if (!found){
+		    sugg_macros.push_back(make_pair<CAction*,int>(macro,1));
+		  }
 		}
 	     }
 	  }
@@ -1893,6 +1959,11 @@ void CLearner::LearnMacrosFromFlips()
       }    
   }
   
+  for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
+    if (mit->second < data.train->size()) continue; 
+    cout << mit->second << "x  Macro: " << mit->first->GetActName() << mit->first->GetParams()->ToString(true) << endl;//debug reasons 
+    
+  }
   
 }
 

@@ -882,7 +882,7 @@ void CLearner::ClearInnerEntStr(void)
 }
 
 //must be called after LearnEntanglements()
-void CLearner::ApplyEntanglements(bool mcronly)
+void CLearner::ApplyEntanglements(bool mcronly,bool actupd)
 {
 	CActionList *acts = data.pdom->GetActions();
 	int i,j;
@@ -901,10 +901,12 @@ void CLearner::ApplyEntanglements(bool mcronly)
 		s="stai_";
 		for (j=0;j<tmplist->Count();j++){
 			if ((*tmplist)[j]->IsEntangled() && !(*tmplist)[j]->IsStatic()){
-				CPredicate *tmp = (*tmplist)[j]->Clone();
-				tmp->SetName(s+tmp->GetName());
-				tmp->SetStatic(true);
-				(*acts)[i]->GetPrec()->AddRecord(tmp);
+				if (actupd){
+			           CPredicate *tmp = (*tmplist)[j]->Clone();
+				   tmp->SetName(s+tmp->GetName());
+				   tmp->SetStatic(true);
+				   (*acts)[i]->GetPrec()->AddRecord(tmp);
+				}
 				if (!ent_init->Subsume((*tmplist)[j], data.pdom->GetTypes())){
 					ent_init->AddRecord((*tmplist)[j]->Clone());
 				}
@@ -917,10 +919,12 @@ void CLearner::ApplyEntanglements(bool mcronly)
 		s="stag_";
 		for (j=0;j<tmplist->Count();j++){
 			if ((*tmplist)[j]->IsEntangled()){ 
-				CPredicate *tmp = (*tmplist)[j]->Clone();
-				tmp->SetName(s+tmp->GetName());
-				tmp->SetStatic(true);
-				(*acts)[i]->GetPrec()->AddRecord(tmp);
+				if (actupd){
+			            CPredicate *tmp = (*tmplist)[j]->Clone();
+				    tmp->SetName(s+tmp->GetName());
+				    tmp->SetStatic(true);
+				    (*acts)[i]->GetPrec()->AddRecord(tmp);
+				}
 				if (!ent_goal->Subsume((*tmplist)[j], data.pdom->GetTypes())){
 					ent_goal->AddRecord((*tmplist)[j]->Clone());
 				}
@@ -1960,11 +1964,32 @@ void CLearner::LearnMacrosFromFlips()
   }
   
   for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
-    if (mit->second < data.train->size()) continue; 
-    cout << mit->second << "x  Macro: " << mit->first->GetActName() << mit->first->GetParams()->ToString(true) << endl;//debug reasons 
+    //not enough macros w.r.t number of training plans
+    if (mit->second < data.train->size()) {mit=sugg_macros.erase(mit);mit--;continue;} 
+    //"deconflicting" goal achievers 
+    for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=mit;mit2++){
+       if (mit->first->GetActName()==mit2->first->GetActName()){
+	  if (mit->first->GetPrec()->Count() > mit2->first->GetPrec()->Count()){
+	   if (mit->second >= 2 * mit2->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
+	    
+	  } else {
+	   if (mit2->second < 2 * mit->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
+	   
+	  }
+       }
+    }
     
   }
+ 
+  for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
+    cout << mit->second << "x  Macro: " << mit->first->GetActName() << mit->first->GetParams()->ToString(true) << endl;//debug reasons
+    //cout <<mit->first->GetPrec()->ToString(false) << endl;//debug reasons
+    
+    data.pdom->GetActions()->AddRecord(mit->first);
+  }
   
+  ApplyEntanglements(true,false);
+
 }
 
 

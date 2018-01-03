@@ -91,7 +91,7 @@ public:
 	void Initialize(short par = 0);
 	void LearnInnerEntanglements(void);
 	void ClearInnerEntStr(void);
-	void ApplyEntanglements(bool mcronly = false);
+	void ApplyEntanglements(bool mcronly = false, bool actupd =true);
 	// must be called after LearnInnerEntanglements()
 	void ApplyInnerEntanglements(void);
 	bool MarkUnnecessaryInverseActions(CPlan* pi, CDependency* dep, deque<inv_pair_str>& inverses, list<int>& unnecessary_acts);

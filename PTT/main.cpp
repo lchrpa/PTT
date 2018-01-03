@@ -553,7 +553,10 @@ int main(int argc, char** argv){
 		   //data.pdom->OutIncompatiblePreds(cout);
 		   //data.pdom->GetFlippingData();
 		   //data.pdom->OutFlippingData(cout);
+		  data.goal=true;
 		  learn.LearnMacrosFromFlips();
+		  DomainToPDDL();
+		  ProblemsToPDDL();
 		}
 		
 		}

@@ -572,6 +572,7 @@ CMacroAction::CMacroAction(CAction *a1, CAction *a2, vector<sh_arg_str> &sh_args
 	cost = a1->GetActionCost()+a2->GetActionCost();
 	
 	Initialize(types);
+	//DetermineInequalityConstraint();
 	
 	this->stat_conn=new bool[params->Count()*params->Count()];
 	memset(stat_conn,0,params->Count()*params->Count()*sizeof(bool));
@@ -947,6 +948,37 @@ bool CMacroAction::TestUsefulness(CDomain *dom)
 	}
       }
       return true;
+}
+
+void CMacroAction::DetermineInequalityConstraint()
+{
+   //using a "trick" - when two predicates are the same with different params
+   vector<sh_arg_str> sh_args;
+   
+   vector<sh_arg_str> *sh_args_tmp; 
+   
+   for (int i=0;i<precondition->Count();i++)
+     for (int j=i+1;j<precondition->Count();j++){
+        sh_args_tmp=new vector<sh_arg_str>(); 
+        if ((*precondition)[i]->Equal((*precondition)[j],params,params,*sh_args_tmp)){
+	   sh_args.insert(sh_args.end(),sh_args_tmp->begin(),sh_args_tmp->end());
+	   
+	}
+     }
+   
+  // cout << "IE passed for " << name << endl;
+   
+   for (vector<sh_arg_str>::iterator it=sh_args.begin();it!=sh_args.end();it++){
+     CParameter *tmp_pars=new CParameter();
+     CParameter *cloned_pars=params->Clone(); //not very clean..
+     tmp_pars->AddRecord((*cloned_pars)[it->first]);
+     tmp_pars->AddRecord((*cloned_pars)[it->second]);
+     CPredicate *tmp_pred=new CPredicate("=",tmp_pars);
+     tmp_pred->Negate();
+     tmp_pred->SetStatic(true);
+     precondition->AddRecord(tmp_pred);
+   }
+   
 }
 
 

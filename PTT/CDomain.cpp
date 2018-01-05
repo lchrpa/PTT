@@ -498,7 +498,7 @@ void CDomain::GeneratePDDL(ostream& s)
 	s << "(define (domain " << name << ")" << endl;
 	
 	//may be customized in future
-	s << "(:requirements :typing" <</* (action_cost ? " :action-costs" : "") <<*/ ")" << endl;
+	s << "(:requirements :typing :equality" <</* (action_cost ? " :action-costs" : "") <<*/ ")" << endl;
 
 	//types 
 	s << "(:types" << ptypes->ToString() << ")" <<endl; 

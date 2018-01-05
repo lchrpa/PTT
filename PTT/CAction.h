@@ -119,6 +119,7 @@ public:
 	virtual CAction* FindPrimitiveForPredicate(CPredicate* p);
 	virtual int ActCount(void);
 	vector<pair<string,vector<short> > >* Unfold(vector<short>*,bool init=false);
+	void DetermineInequalityConstraint();
 protected:
 	bool uninformative;
 private:

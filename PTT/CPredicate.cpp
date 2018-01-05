@@ -193,7 +193,7 @@ int CPredicate::GetAttribute()
 	return this->d;
 }
 
-//test whether (ground) predicates are equal, then returns attribute d otherwise returns -1
+//test whether (ground) predicates are equal, then returns attribute d otherwise returns -1; for unground returns -1 if differ in parameter names
 int CPredicate::EqualGround(CPredicate *p)
 {
 	if (strcasecmp(this->name.data(),p->name.data())!=0) return -1;

@@ -48,7 +48,7 @@ public:
 
 private:
 	bool entangled; //in preconditions - by init, in effects - by goal
-	short inner_entangled; //in precondition - previously, in effect - successively
+	short inner_entangled; //in precondition - precedingly, in effect - successively
 	bool stat;
 	int d;
 	bool neg;

@@ -445,19 +445,19 @@ int CAction::ComponentCount(void)
 	return components.size();
 }
 
-bool CAction::HasMeaningfulInitEnt(void)
+bool CAction::HasMeaningfulInitEnt(int pars_count)
 {
 	for(int i=0;i<precondition->Count();i++){
-		if ((*precondition)[i]->IsEntangled() && !(*precondition)[i]->IsStatic() && (*precondition)[i]->GetPars()->Count()>=2) return true;
+		if ((*precondition)[i]->IsEntangled() && !(*precondition)[i]->IsStatic() && (*precondition)[i]->GetPars()->Count()>=pars_count) return true;
 	}
 	
 	return false;
 }
 
-bool CAction::HasMeaningfulGoalEnt(void)
+bool CAction::HasMeaningfulGoalEnt(int pars_count)
 {
 	for(int i=0;i<posEffects->Count();i++){
-		if ((*posEffects)[i]->IsEntangled() && (*posEffects)[i]->GetPars()->Count()>=2) return true;
+		if ((*posEffects)[i]->IsEntangled() && (*posEffects)[i]->GetPars()->Count()>=pars_count) return true;
 	}
 	
 	return false;
@@ -970,6 +970,7 @@ void CMacroAction::DetermineInequalityConstraint()
    
    for (vector<sh_arg_str>::iterator it=sh_args.begin();it!=sh_args.end();it++){
      CParameter *tmp_pars=new CParameter();
+     if ((*params)[it->first]->name == (*params)[it->second]->name) continue;
      CParameter *cloned_pars=params->Clone(); //not very clean..
      tmp_pars->AddRecord((*cloned_pars)[it->first]);
      tmp_pars->AddRecord((*cloned_pars)[it->second]);
@@ -979,6 +980,25 @@ void CMacroAction::DetermineInequalityConstraint()
      precondition->AddRecord(tmp_pred);
    }
    
+}
+
+int CMacroAction::HasIntermediateAdditionalArgs()
+{
+   vector<short> px;
+   int additional=0;
+   
+   vector<pair<string,vector<short> > > *pars=Unfold(&px);
+   
+   for (vector<short>::iterator it=px.begin();it!=px.end();it++){
+     //cout << "Macro: " << name << " par: $" << *it << "   " << (++pars->begin())->first << " " << pars->rbegin()->first <<  endl;
+     if ( find((++pars->begin())->second.begin(),(++pars->begin())->second.end(),*it) == (++pars->begin())->second.end() &&
+          find(pars->rbegin()->second.begin(),pars->rbegin()->second.end(),*it) == pars->rbegin()->second.end() ) {
+         additional++;
+     }
+     
+   }
+   
+   return additional;
 }
 
 

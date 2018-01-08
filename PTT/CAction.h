@@ -77,8 +77,8 @@ public:
 	void GenerateStatGraph(void);
 	void GenerateComponents(void);
 	int ComponentCount(void);
-	bool HasMeaningfulInitEnt(void);
-	bool HasMeaningfulGoalEnt(void);
+	bool HasMeaningfulInitEnt(int pars_count = 2);
+	bool HasMeaningfulGoalEnt(int pars_count = 2);
 	bool HasConnectedEnts();
 };
 
@@ -134,6 +134,7 @@ public:
 	bool IsRepetitive(void);
 	void FindActionPositions(CActionList* acts, int& i, int& j);
 	bool TestUsefulness(CDomain *dom);
+	int HasIntermediateAdditionalArgs();
 };
 
 #endif // !defined(AFX_CACTION_H__E0CF8871_5248_4893_AAFE_C70EA474EA33__INCLUDED_)

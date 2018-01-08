@@ -1965,7 +1965,7 @@ void CLearner::LearnMacrosFromFlips()
   
   for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
     //not enough macros w.r.t number of training plans
-    if (mit->second < 2 * data.train->size() || ((CMacroAction*)mit->first)->IsUninformative()) {mit=sugg_macros.erase(mit);mit--;continue;} 
+    if (mit->second < 2 * data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() || (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)) {mit=sugg_macros.erase(mit);mit--;continue;} 
     //"deconflicting" goal achievers 
     for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=mit;mit2++){
        if (mit->first->GetActName()==mit2->first->GetActName()){

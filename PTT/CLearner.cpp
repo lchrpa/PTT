@@ -1965,16 +1965,16 @@ void CLearner::LearnMacrosFromFlips()
   
   for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
     //not enough macros w.r.t number of training plans
-    if (mit->second < 2 * data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() || (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)) {mit=sugg_macros.erase(mit);mit--;continue;} 
+    if (mit->second < 2 * data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() /*|| (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)*/) {mit=sugg_macros.erase(mit);mit--;continue;} 
     //"deconflicting" goal achievers 
     for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=mit;mit2++){
        if (mit->first->GetActName()==mit2->first->GetActName()){
 	  if (mit->first->GetPrec()->Count() > mit2->first->GetPrec()->Count()){
-	   if (mit->second >= 2 * mit2->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
+	   //if (mit->second >= 2 * mit2->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
 	    
-	  } else {
-	   if (mit2->second < 2 * mit->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
-	   
+	 // } else {
+	  // if (mit2->second < 2 * mit->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
+	   mit2=sugg_macros.erase(mit2);mit2--; //erase macro with less goal ents 
 	  }
        }
     }
@@ -1991,6 +1991,62 @@ void CLearner::LearnMacrosFromFlips()
   
   ApplyEntanglements(true,false);
 
+}
+
+void CLearner::LearnMacrosFromAbsorbtions()
+{
+   vector<pair<CAction*,int> > sugg_macros;
+   
+   for (deque<CProblem*>::iterator it_prob=data.train->begin();it_prob!=data.train->end();it_prob++){
+	  CPlan *plan = (*it_prob)->GetPlan();
+	  //vector<int> remaining_acts(plan->Length()); for (int i=0;i<plan->Length();i++) remaining_acts[i]=i;
+	  set<int> considered;
+	  for (int it=0;it<plan->Length();it++){
+	     if (considered.find(it) != considered.end()) continue;
+	     int ref_it = it;
+             for (int it2=it+1;it2<plan->Length();it2++){
+	        if (considered.find(it2) != considered.end()) continue;
+	        vector<sh_arg_str> sh_args;
+		if ((*plan)[ref_it]->GetPosEff()->Equal((*plan)[it2]->GetPrec(),(*plan)[ref_it]->GetParams(),(*plan)[it2]->GetParams(),sh_args,true) && 
+		    !(*plan)[ref_it]->GetPosEff()->Disjunct((*plan)[it2]->GetNegEff())
+		   ){
+		  
+		   CPredicateList tmp_preds = ((*(*plan)[it2]->GetPrec())-(*(*plan)[ref_it]->GetPosEff()))-(*(*plan)[ref_it]->GetPrec());
+		   bool found = false;
+		   for (int j=0;j<tmp_preds.Count();j++){
+		      sh_args.clear();
+		      tmp_preds[j]->GetPars()->DetectShared((*plan)[ref_it]->GetParams(),sh_args);
+		      if (!sh_args.empty()) {found=true;break;}
+		   }
+		   if (found){ 
+		       deque<int> out_ma; for (int i=(ref_it)+1;i<it2;i++) out_ma.push_back(i);
+		       bool independent=true;
+		       while (independent && !out_ma.empty()) {//upwards
+		           independent=(*plan)[out_ma.front()]->IndependentWith((*plan)[ref_it]) && !(*plan)[ref_it]->AchieverForGnd((*plan)[out_ma.front()]);
+		           if (independent) out_ma.pop_front(); 
+		      }
+		      independent=true;
+		      while (independent && !out_ma.empty()) {//downwards
+		           independent=(*plan)[out_ma.back()]->IndependentWith((*plan)[it2])  && !(*plan)[out_ma.back()]->AchieverForGnd((*plan)[it2]);
+			   if (independent) out_ma.pop_back(); 
+		      }
+		     
+		      if (out_ma.empty()){
+		     
+		          cout << (*plan)[ref_it]->GetActName() << " is absorbed by " << (*plan)[it2]->GetActName() << " -- "; //debug reasons
+		          
+		          ref_it = it2;
+			  considered.insert(ref_it);
+			  		          
+		      }
+		   }
+		}
+	     }
+	     
+	     cout << endl; //debug reasons
+	  }
+	  
+   }
 }
 
 

@@ -111,6 +111,7 @@ public:
 	void EliminateUselessMacros();
 
         void LearnMacrosFromFlips();
+	void LearnMacrosFromAbsorbtions();
 	
 	void CreateStats();
 	void OutputAchievers(vector<achievers> &achs,ostream &s);

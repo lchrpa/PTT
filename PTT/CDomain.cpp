@@ -571,7 +571,7 @@ void CDomain::ReformulateByEntanglements(CPredicateList* ent_init, CPredicateLis
 	for (i=0;i<ent_init->Count();i++){		
 		knowledge_file << (*ent_init)[i]->GetName();
 		(*ent_init)[i]->SetName(s+(*ent_init)[i]->GetName());
-		ppreds->AddRecord((*ent_init)[i]);
+		if (ppreds->FindProperPredicate((*ent_init)[i]->GetName())==-1) ppreds->AddRecord((*ent_init)[i]);
 		knowledge_file << "->" << (*ent_init)[i]->GetName() << endl;
 	}
 
@@ -580,7 +580,7 @@ void CDomain::ReformulateByEntanglements(CPredicateList* ent_init, CPredicateLis
 	for (i=0;i<ent_goal->Count();i++){		
 		knowledge_file << (*ent_goal)[i]->GetName();
 		(*ent_goal)[i]->SetName(s+(*ent_goal)[i]->GetName());
-		ppreds->AddRecord((*ent_goal)[i]);
+		if (ppreds->FindProperPredicate((*ent_goal)[i]->GetName())==-1) ppreds->AddRecord((*ent_goal)[i]);
 		knowledge_file << "->" << (*ent_goal)[i]->GetName() << endl;
 	}
 }
@@ -627,10 +627,23 @@ void CDomain::ImportMacros(list<mcr*>* macros)
 	   }
 	   a = new CMacroAction(a,b,*sh_args);
 	}
-	if (!((CMacroAction*)a)->IsUninformative() && new_mcrs->FindProperAction(a->GetActName(),i)==NULL)
+	if (!((CMacroAction*)a)->IsUninformative() && new_mcrs->FindProperAction(a->GetActName(),i)==NULL){
+	  //cout << "Improting " << a->GetActName() << endl;
 	  new_mcrs->AddRecord(a);
+	}
     }
     
     for (int j=0;j<new_mcrs->Count();j++) pacts->AddRecord((*new_mcrs)[j]);
 }
 
+//predicates starting with "stai_" or "stag_" will be considered as "entangled"
+void CDomain::ReconstructEntanglements()
+{
+   for (int i=0;i<pacts->Count();i++)
+     for (int j=0;j<(*pacts)[i]->GetPrec()->Count();j++){
+       CPredicate *pred = (*(*pacts)[i]->GetPrec())[j];
+       if (pred->GetName().find("stai_")==0) pred->SetEntanglement(true);
+       if (pred->GetName().find("stag_")==0) pred->SetEntanglement(true);
+     }
+       
+}

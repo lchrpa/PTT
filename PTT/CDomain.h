@@ -113,6 +113,7 @@ public:
 	void ReformulateByEntanglements(CPredicateList* ent_init, CPredicateList* ent_goal);
 	void ReformulateByInnerEntanglements(CPredicateList* ent_prev, CPredicateList* ent_succ);
 	void ImportMacros(list<mcr*> *macros);
+	void ReconstructEntanglements();
 };
 
 

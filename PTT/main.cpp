@@ -212,6 +212,8 @@ void parse_input(string fname){
 		}
 
 	}
+	
+	if (data.macrosx!=0) data.macroentanglements=0; //avoiding "double" macro generation
 
 	f.close();
 }
@@ -564,10 +566,15 @@ int main(int argc, char** argv){
 		   //data.pdom->OutIncompatiblePreds(cout);
 		   //data.pdom->GetFlippingData();
 		   //data.pdom->OutFlippingData(cout);
+		 // data.pdom->ImportMacros(&mcr_stuff);
+		  //data.pdom->IdentifyStaticPredicates();
+	          //learn.Initialize();
 		  data.goal=true;
+		  data.pdom->ReconstructEntanglements();
+		  //cout << "Initialized " << endl;
 		  learn.LearnMacrosFromAbsorbtions();
-		  //DomainToPDDL();
-		  //ProblemsToPDDL();
+		  DomainToPDDL();
+		  ProblemsToPDDL();
 		}
 		
 		}

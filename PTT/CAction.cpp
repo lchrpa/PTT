@@ -960,7 +960,7 @@ void CMacroAction::DetermineInequalityConstraint()
    for (int i=0;i<precondition->Count();i++)
      for (int j=i+1;j<precondition->Count();j++){
         sh_args_tmp=new vector<sh_arg_str>(); 
-        if ((*precondition)[i]->Equal((*precondition)[j],params,params,*sh_args_tmp)){
+        if (!(*precondition)[i]->IsStatic() && (*precondition)[i]->Equal((*precondition)[j],params,params,*sh_args_tmp)){
 	   sh_args.insert(sh_args.end(),sh_args_tmp->begin(),sh_args_tmp->end());
 	   
 	}

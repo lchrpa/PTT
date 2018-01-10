@@ -778,3 +778,19 @@ CPredicateList* CPredicateList::Intersect(CPredicateList* pl)
 	
 	return ret;
 }
+
+bool CPredicateList::SubSetOf(CPredicateList* pl)
+{
+       int i,j;
+       for (i=0;i<Count();i++){
+		for(j=0;j<pl->Count();j++){
+			if (((*ppredlist)[i])->EqualGround((*pl)[j])!=-1){
+				break;
+			}
+		}
+		if (j==pl->Count()) return false; //we haven't found a matching predicate in pl
+	}
+	
+	return true;
+}
+

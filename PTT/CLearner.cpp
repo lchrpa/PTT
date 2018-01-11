@@ -1943,6 +1943,22 @@ void CLearner::LearnMacrosFromFlips()
 			//if (!ent_goal->Subsume((*tmplist)[j], data.pdom->GetTypes())){
 			//	ent_goal->AddRecord((*tmplist)[j]->Clone());
 			//}
+			
+			//finding "connecting" initial entanglement
+			for (int q = 0;q<ref_act->GetPrec()->Count();q++){
+			  if (strcasecmp((*ref_act->GetPosEff())[k]->GetName().data(),(*ref_act->GetPrec())[q]->GetName().data())==0 && ref_act->GetNegEff()->Find((*ref_act->GetPrec())[q])!=-1){
+			    vector<sh_arg_str> x;
+	                    (*ref_act->GetPrec())[q]->GetPars()->DetectShared((*ref_act->GetPosEff())[k]->GetPars(),x); //shared parameter (object)
+			    if (!x.empty()){
+			        (*macro->GetPrec())[q]->SetEntanglement(true);
+				 string st2="stai_";
+				 CPredicate *tmp = (*macro->GetPrec())[q]->Clone();
+			         tmp->SetName(st2+tmp->GetName());
+			         tmp->SetStatic(true);
+		            	macro->GetPrec()->AddRecord(tmp);
+			    }
+			  }
+			}
 		     }
 		     
 		  }
@@ -2073,6 +2089,22 @@ void CLearner::LearnMacrosFromAbsorbtions()
 			//if (!ent_goal->Subsume((*tmplist)[j], data.pdom->GetTypes())){
 			//	ent_goal->AddRecord((*tmplist)[j]->Clone());
 			//}
+			
+			//finding "connecting" initial entanglement
+			for (int q = 0;q<ref_act->GetPrec()->Count();q++){
+			  if (strcasecmp((*ref_act->GetPosEff())[k]->GetName().data(),(*ref_act->GetPrec())[q]->GetName().data())==0 && ref_act->GetNegEff()->Find((*ref_act->GetPrec())[q])!=-1){
+			    vector<sh_arg_str> x;
+	                    (*ref_act->GetPrec())[q]->GetPars()->DetectShared((*ref_act->GetPosEff())[k]->GetPars(),x); //shared parameter (object)
+			    if (!x.empty()){
+			        (*macro->GetPrec())[q]->SetEntanglement(true);
+				 string st2="stai_";
+				 CPredicate *tmp = (*macro->GetPrec())[q]->Clone();
+			         tmp->SetName(st2+tmp->GetName());
+			         tmp->SetStatic(true);
+		            	macro->GetPrec()->AddRecord(tmp);
+			    }
+			  }
+			}
 		     }
 		     
               }

@@ -555,7 +555,7 @@ int main(int argc, char** argv){
 		   //data.pdom->OutIncompatiblePreds(cout);
 		   //data.pdom->GetFlippingData();
 		   //data.pdom->OutFlippingData(cout);
-		  data.goal=true;
+		  data.init=data.goal=true;
 		  learn.LearnMacrosFromFlips();
 		  DomainToPDDL();
 		  ProblemsToPDDL();
@@ -569,7 +569,7 @@ int main(int argc, char** argv){
 		 // data.pdom->ImportMacros(&mcr_stuff);
 		  //data.pdom->IdentifyStaticPredicates();
 	          //learn.Initialize();
-		  data.goal=true;
+		  data.init=data.goal=true;
 		  data.pdom->ReconstructEntanglements();
 		  //cout << "Initialized " << endl;
 		  learn.LearnMacrosFromAbsorbtions();

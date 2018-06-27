@@ -129,6 +129,7 @@ void CPlan::InstantiateActions(CActionList *acts)
 	this->act_plan=new vector<CAction*>();
 	for (int i=0;i<this->plan->size();i++){
 		a=acts->FindProperAction((*this->plan)[i].actname,k); //find proper action (operator)
+		//cout << "Finding: " << (*this->plan)[i].actname << " - found:" << a->GetActName() << endl;
 		b=a->Instantiate((*this->plan)[i].params);
 		this->act_plan->push_back(b);
 	}

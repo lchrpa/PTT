@@ -121,6 +121,7 @@ void CDomain::IdentifyStaticPredicates()
 
 	for (i=0;i<this->pacts->Count();i++){
 		op=(*this->pacts)[i];
+		cout << "Action" << (*this->pacts)[i]->GetActName() << (*this->pacts)[i]->GetParams()->ToString(true) << endl;
 		for (j=0;j<op->GetPrec()->Count();j++){
 			p=(*op->GetPrec())[j];
 			ineff=false;
@@ -244,6 +245,9 @@ void CDomain::GetFlippingData()
         if (incompatible_preds[i*n+j].first==1 && (*ppreds)[i]->GetPars()->Count()!=(*ppreds)[j]->GetPars()->Count()){
 	  CPredicate* tmp_p1 = ((*ppreds)[i]->GetPars()->Count() < (*ppreds)[j]->GetPars()->Count()) ? (*ppreds)[i] : (*ppreds)[j];
 	  CPredicate* tmp_p2 = ((*ppreds)[i]->GetPars()->Count() > (*ppreds)[j]->GetPars()->Count()) ? (*ppreds)[i] : (*ppreds)[j];
+	  //CPredicate* tmp_p1 = (*ppreds)[i];
+	  //CPredicate* tmp_p2 = (*ppreds)[j];
+	  //cout << tmp_p1->ToString(false) << tmp_p2->ToString(false) << endl;//debug
 	  if (tmp_p1->GetPars()->Count() == incompatible_preds[i*n+j].second->size()){//thesecond predicate must "extend" the first one
 	      flipping_data *tmpdata = new flipping_data();
 	      tmpdata->starting=new CActionList();
@@ -261,6 +265,51 @@ void CDomain::GetFlippingData()
 	      }
 	  }
 	}
+	
+	if (incompatible_preds[i*n+j].first==1 && (*ppreds)[i]->GetPars()->Count()==(*ppreds)[j]->GetPars()->Count()){
+	  //CPredicate* tmp_p1 = ((*ppreds)[i]->GetPars()->Count() < (*ppreds)[j]->GetPars()->Count()) ? (*ppreds)[i] : (*ppreds)[j];
+	  //CPredicate* tmp_p2 = ((*ppreds)[i]->GetPars()->Count() > (*ppreds)[j]->GetPars()->Count()) ? (*ppreds)[i] : (*ppreds)[j];
+	  CPredicate* tmp_p1 = (*ppreds)[i];
+	  CPredicate* tmp_p2 = (*ppreds)[j];
+	  //cout << tmp_p1->ToString(false) << tmp_p2->ToString(false) << endl;//debug
+	  if (tmp_p1->GetPars()->Count() == incompatible_preds[i*n+j].second->size()){//thesecond predicate must "extend" the first one
+	      flipping_data *tmpdata = new flipping_data();
+	      tmpdata->starting=new CActionList();
+	      tmpdata->finishing=new CActionList();
+	      tmpdata->p1=tmp_p1;
+	      tmpdata->p2=tmp_p2;
+	      tmpdata->shared_args=incompatible_preds[i*n+j].second;
+	      for (int k=0; k<pacts->Count();k++){
+		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p1->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p2->GetName())!=-1) tmpdata->starting->AddRecord((*pacts)[k]);
+		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p2->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p1->GetName())!=-1) tmpdata->finishing->AddRecord((*pacts)[k]);
+	      }
+	      if (!tmpdata->starting->Count()==0 && !tmpdata->finishing->Count()==0){//no "flipping" actions nothing to connect
+	      
+	           flipping.push_back((*tmpdata));
+	      }
+	  }
+	  
+	  tmp_p1 = (*ppreds)[j];
+	  tmp_p2 = (*ppreds)[i];
+	  //cout << tmp_p1->ToString(false) << tmp_p2->ToString(false) << endl;//debug
+	  if (tmp_p1->GetPars()->Count() == incompatible_preds[i*n+j].second->size()){//thesecond predicate must "extend" the first one
+	      flipping_data *tmpdata = new flipping_data();
+	      tmpdata->starting=new CActionList();
+	      tmpdata->finishing=new CActionList();
+	      tmpdata->p1=tmp_p1;
+	      tmpdata->p2=tmp_p2;
+	      tmpdata->shared_args=incompatible_preds[i*n+j].second;
+	      for (int k=0; k<pacts->Count();k++){
+		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p1->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p2->GetName())!=-1) tmpdata->starting->AddRecord((*pacts)[k]);
+		if ((*pacts)[k]->GetNegEff()->FindProperPredicate(tmp_p2->GetName())!=-1 && (*pacts)[k]->GetPosEff()->FindProperPredicate(tmp_p1->GetName())!=-1) tmpdata->finishing->AddRecord((*pacts)[k]);
+	      }
+	      if (!tmpdata->starting->Count()==0 && !tmpdata->finishing->Count()==0){//no "flipping" actions nothing to connect
+	      
+	           flipping.push_back((*tmpdata));
+	      }
+	  }
+	}
+	
       }
     }
     flipping_iter=flipping.begin();
@@ -617,14 +666,23 @@ void CDomain::ImportMacros(list<mcr*>* macros)
         for (vector<act*>::iterator it2= (*it)->second.begin();it2!=(*it)->second.end();it2++){
 	   if (a == NULL) {a = this->pacts->FindProperAction((*it2)->first,i);continue;}
 	   CAction *b = this->pacts->FindProperAction((*it2)->first,i);
+	   cout << "a1: " << a->GetActName() << " - a2: " << b->GetActName() << endl; //debug
 	   sh_args = new vector<sh_arg_str>();
 	   for (int j=0;j<(*it2)->second.size();j++){
-	     if ((*it2)->second[j]>a->GetParams()->Count()) continue; //parameter is not shared
+	     if ((*it2)->second[j]>=a->GetParams()->Count()) continue; //parameter is not shared
 	     sh = new sh_arg_str();
-	     sh->first = (*it2)->second[j]-1;
+	     sh->first = (*it2)->second[j];//-1;
 	     sh->second = j;
 	     sh_args->push_back(*sh);
 	   }
+	 
+	   cout << "a1: " << a->GetActName() << " - a2: " << b->GetActName() << " again " << endl; //debug
+	   for (int k=0;k<sh_args->size();k++){ //debug
+			if (k>0) cout << ", ";
+			cout << "[" << (*sh_args)[k].first << "," << (*sh_args)[k].second << "]";
+	   }
+	   cout << endl;
+	   
 	   a = new CMacroAction(a,b,*sh_args);
 	}
 	if (!((CMacroAction*)a)->IsUninformative() && new_mcrs->FindProperAction(a->GetActName(),i)==NULL){

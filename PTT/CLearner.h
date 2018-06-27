@@ -110,7 +110,7 @@ public:
 	
 	void EliminateUselessMacros();
 
-        void LearnMacrosFromFlips();
+        void LearnMacrosFromFlips(bool no_im_args = false);
 	void LearnMacrosFromAbsorbtions();
 	
 	void CreateStats();

@@ -476,7 +476,7 @@ int main(int argc, char** argv){
 	printf("Elapsed time for parsing: %.3lf\n", diff);
 	
 	
-	if (data.macroentanglements!=6) learn.Initialize();
+	if (data.macroentanglements!=6 && data.macrosx!=10) learn.Initialize();
 	
 	if (data.stats){
 	 learn.CreateStats();
@@ -499,7 +499,7 @@ int main(int argc, char** argv){
 		  learn.LearnMacros();
 		  DomainToPDDL();
 		} else {
-		if (data.entanglements&&data.macroentanglements==0){
+		if (data.entanglements&&data.macroentanglements==0&&data.macrosx==0){
 			if (data.init || data.goal) learn.LearnEntanglements();
 			if (data.prec || data.succ) learn.LearnInnerEntanglements();
 
@@ -536,7 +536,7 @@ int main(int argc, char** argv){
 			ProblemsToPDDL();
 		      
 		    }
-		    if (data.macroentanglements==6){
+		    if (data.macroentanglements==6&&data.macrosx==0){
 			data.pdom->ImportMacros(&mcr_stuff);
 			if (data.init || data.goal) {
 			  data.pdom->IdentifyStaticPredicates();
@@ -550,15 +550,30 @@ int main(int argc, char** argv){
 		    }
 		
 		}
-		if (data.macrosx==1){ //"flipping" macros
+		if (data.macrosx==1 || data.macrosx==11){ //"flipping" macros
 		   //data.pdom->IdentifyIncomaptiblePredicates();
 		   //data.pdom->OutIncompatiblePreds(cout);
 		   //data.pdom->GetFlippingData();
 		   //data.pdom->OutFlippingData(cout);
 		  data.init=data.goal=true;
-		  learn.LearnMacrosFromFlips();
+		  learn.LearnMacrosFromFlips(data.macrosx==11);
 		  DomainToPDDL();
 		  ProblemsToPDDL();
+		}
+		
+		if (data.entanglements&data.macrosx==10){
+		  cout << "importing macros"<< endl;
+		  data.pdom->ImportMacros(&mcr_stuff);
+		  cout << "imported macros"<< endl;
+		  dom->IdentifyStaticPredicates();
+		  learn.Initialize();
+		  //data.init=data.goal=true;
+		  cout << "Initialized"<<endl;
+		  learn.LearnEntanglements();
+		  cout << "Ents learnt"<<endl;
+	        //  learn.EliminateUselessMacros();
+		  learn.ApplyEntanglements(true);
+		  
 		}
 		
 		if (data.macrosx==2){ //"absorbed" macros

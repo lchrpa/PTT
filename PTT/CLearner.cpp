@@ -1858,11 +1858,12 @@ void CLearner::EliminateUselessMacros()
   
 }
 
-void CLearner::LearnMacrosFromFlips()
+void CLearner::LearnMacrosFromFlips(bool no_im_args)
 {
   vector<pair<CAction*,int> > sugg_macros;
   flipping_data *rec;
   data.pdom->IdentifyIncomaptiblePredicates();
+  data.pdom->OutIncompatiblePreds(cout);
   data.pdom->GetFlippingData();
   data.pdom->OutFlippingData(cout); //debug reasons
   while( (rec=data.pdom->NextFlippingItem()) != NULL){
@@ -1917,6 +1918,17 @@ void CLearner::LearnMacrosFromFlips()
 		      if (independent) out_ma.pop_back(); 
 		  }
 		  
+		  CAction *ref_act_2 = (*plan)[i];
+		  if (no_im_args){
+		     
+		     for (vector<int>::iterator it_in=++in_ma.begin();it_in!=in_ma.end();it_in++){
+		           vector<sh_arg_str> *sh_args=new vector<sh_arg_str>();
+		           ref_act_2->DetectSharedArgs((*plan)[*it_in],*sh_args);
+		           ref_act_2 = new CMacroAction(ref_act_2,(*plan)[*it_in],*sh_args);
+		      
+		      }
+		  }
+		  
 		  vector<int> fin(in_ma.size()+out_ma.size());
 		  
 		  merge(in_ma.begin(),in_ma.end(),out_ma.begin(),out_ma.end(),fin.begin());
@@ -1926,10 +1938,10 @@ void CLearner::LearnMacrosFromFlips()
 		  
 		  for (vector<int>::iterator it_in=++fin.begin();it_in!=fin.end();it_in++){
 		      zz--;
-		      if (rec->starting->FindProperAction((*plan)[*it_in]->GetActName(),s)!=NULL || 
+		      /*if (rec->starting->FindProperAction((*plan)[*it_in]->GetActName(),s)!=NULL || 
 			 ((rec->finishing->FindProperAction((*plan)[*it_in]->GetActName(),s)!=NULL && zz>0))){ //flips overlap
 			     acc=false; break;
-			 }
+			 }*/
 		      vector<sh_arg_str> *sh_args=new vector<sh_arg_str>();
 		      ref_act->DetectSharedArgs((*plan)[*it_in],*sh_args);
 		      ref_act = new CMacroAction(ref_act,(*plan)[*it_in],*sh_args);
@@ -1938,8 +1950,10 @@ void CLearner::LearnMacrosFromFlips()
 		  }
 		   
 		  if (!acc) continue; 
-		  //cout << "Macro: " << macro->GetActName() << macro->GetParams()->ToString(true) << endl;//debug reasons 
+		  if (no_im_args && ref_act_2->GetParams()->Count()<ref_act->GetParams()->Count()) continue;
 		  
+		  //cout << "Macro: " << macro->GetActName() << macro->GetParams()->ToString(true) << endl;//debug reasons 
+		  /*
 		  for (int k=0;k<ref_act->GetPosEff()->Count();k++){
 		     if ((*it_prob)->GetGoal()->Find((*ref_act->GetPosEff())[k])!=-1){
 		    //    cout << "goal achiever: " <<  (*ref_act->GetPosEff())[k]->ToString(false) << endl; //debug reasons
@@ -1958,7 +1972,7 @@ void CLearner::LearnMacrosFromFlips()
 			  if (strcasecmp((*ref_act->GetPosEff())[k]->GetName().data(),(*ref_act->GetPrec())[q]->GetName().data())==0 && ref_act->GetNegEff()->Find((*ref_act->GetPrec())[q])!=-1){
 			    vector<sh_arg_str> x;
 	                    (*ref_act->GetPrec())[q]->GetPars()->DetectShared((*ref_act->GetPosEff())[k]->GetPars(),x); //shared parameter (object)
-			    if (!x.empty()){
+			    if (!x.empty() && (*it_prob)->GetInit()->Find((*ref_act->GetPrec())[q])!=-1){
 			        (*macro->GetPrec())[q]->SetEntanglement(true);
 				 string st2="stai_";
 				 CPredicate *tmp = (*macro->GetPrec())[q]->Clone();
@@ -1971,7 +1985,7 @@ void CLearner::LearnMacrosFromFlips()
 		     }
 		     
 		  }
-		  
+		  */
 		  bool found=false;
 		  vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
 		  while (!found && mit !=sugg_macros.end()){
@@ -1990,8 +2004,10 @@ void CLearner::LearnMacrosFromFlips()
   
   for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
     //not enough macros w.r.t number of training plans
-    if (mit->second < 2 * data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() /*|| (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)*/) {mit=sugg_macros.erase(mit);mit--;continue;} 
+    // cout << mit->second << "x t Macro: " << mit->first->GetActName() << mit->first->GetPrec()->ToString(false) << endl;//debug reasons
+    if (mit->second <  data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() /*|| (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)*/) {mit=sugg_macros.erase(mit);mit--;continue;} 
     //"deconflicting" goal achievers 
+   
     for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=mit;mit2++){
        if (mit->first->GetActName()==mit2->first->GetActName()){
 	  if (mit->first->GetPrec()->Count() > mit2->first->GetPrec()->Count()){

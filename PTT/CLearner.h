@@ -109,9 +109,12 @@ public:
 	void GuessMacros();
 	
 	void EliminateUselessMacros();
+	
+	void EliminateInfrequentMacros(int freq);
 
         void LearnMacrosFromFlips(bool no_im_args = false);
 	void LearnMacrosFromAbsorbtions();
+	void LearnMacrosFromStaticPreconditions();
 	
 	void CreateStats();
 	void OutputAchievers(vector<achievers> &achs,ostream &s);

@@ -476,7 +476,7 @@ int main(int argc, char** argv){
 	printf("Elapsed time for parsing: %.3lf\n", diff);
 	
 	
-	if (data.macroentanglements!=6 && data.macrosx!=10) learn.Initialize();
+	if (data.macroentanglements!=6 && data.macrosx<10) learn.Initialize();
 	
 	if (data.stats){
 	 learn.CreateStats();
@@ -573,6 +573,25 @@ int main(int argc, char** argv){
 		  cout << "Ents learnt"<<endl;
 	        //  learn.EliminateUselessMacros();
 		  learn.ApplyEntanglements(true);
+		  learn.EliminateInfrequentMacros(data.train->size()*2);
+		  DomainToPDDL();
+		  ProblemsToPDDL();
+		}
+		
+		if (data.macrosx==12){
+		  cout << "importing macros"<< endl;
+		  data.pdom->ImportMacros(&mcr_stuff);
+		  cout << "imported macros"<< endl;
+		  dom->IdentifyStaticPredicates();
+		  learn.Initialize();
+		  //data.init=data.goal=true;
+		 // cout << "Initialized"<<endl;
+		  learn.LearnMacrosFromStaticPreconditions();
+		  //cout << "Ents learnt"<<endl;
+	        //  learn.EliminateUselessMacros();
+		  //learn.ApplyEntanglements(true);
+		   DomainToPDDL();
+		  ProblemsToPDDL();
 		  
 		}
 		

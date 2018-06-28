@@ -794,3 +794,14 @@ bool CPredicateList::SubSetOf(CPredicateList* pl)
 	return true;
 }
 
+CPredicateList* CPredicateList::ExtractStatic(int pars,bool noequality)
+{
+  CPredicateList* ret=new CPredicateList(); 
+  for (deque<CPredicate*>::iterator it=ppredlist->begin();it!=ppredlist->end();it++){
+    if ((*it)->IsStatic()&&(*it)->GetPars()->Count()>=pars&&(!noequality || (*it)->GetName()!="=")  ) ret->AddRecord(*it);
+  }
+  
+  return ret;
+    
+}
+

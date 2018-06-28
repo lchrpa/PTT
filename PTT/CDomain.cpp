@@ -121,7 +121,7 @@ void CDomain::IdentifyStaticPredicates()
 
 	for (i=0;i<this->pacts->Count();i++){
 		op=(*this->pacts)[i];
-		cout << "Action" << (*this->pacts)[i]->GetActName() << (*this->pacts)[i]->GetParams()->ToString(true) << endl;
+		//cout << "Action" << (*this->pacts)[i]->GetActName() << (*this->pacts)[i]->GetParams()->ToString(true) << endl;
 		for (j=0;j<op->GetPrec()->Count();j++){
 			p=(*op->GetPrec())[j];
 			ineff=false;
@@ -666,7 +666,7 @@ void CDomain::ImportMacros(list<mcr*>* macros)
         for (vector<act*>::iterator it2= (*it)->second.begin();it2!=(*it)->second.end();it2++){
 	   if (a == NULL) {a = this->pacts->FindProperAction((*it2)->first,i);continue;}
 	   CAction *b = this->pacts->FindProperAction((*it2)->first,i);
-	   cout << "a1: " << a->GetActName() << " - a2: " << b->GetActName() << endl; //debug
+	   //cout << "a1: " << a->GetActName() << " - a2: " << b->GetActName() << endl; //debug
 	   sh_args = new vector<sh_arg_str>();
 	   for (int j=0;j<(*it2)->second.size();j++){
 	     if ((*it2)->second[j]>=a->GetParams()->Count()) continue; //parameter is not shared
@@ -675,14 +675,14 @@ void CDomain::ImportMacros(list<mcr*>* macros)
 	     sh->second = j;
 	     sh_args->push_back(*sh);
 	   }
-	 
+	   /* 
 	   cout << "a1: " << a->GetActName() << " - a2: " << b->GetActName() << " again " << endl; //debug
 	   for (int k=0;k<sh_args->size();k++){ //debug
 			if (k>0) cout << ", ";
 			cout << "[" << (*sh_args)[k].first << "," << (*sh_args)[k].second << "]";
 	   }
 	   cout << endl;
-	   
+	   */
 	   a = new CMacroAction(a,b,*sh_args);
 	}
 	if (!((CMacroAction*)a)->IsUninformative() && new_mcrs->FindProperAction(a->GetActName(),i)==NULL){

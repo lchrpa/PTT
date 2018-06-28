@@ -104,6 +104,7 @@ public:
 	CPredicate* SubsumeP(CPredicate* p, CTypes* t);
 	CPredicateList* Intersect(CPredicateList* p);
 	bool SubSetOf(CPredicateList* pl); //for grounded predicates
+	CPredicateList* ExtractStatic(int pars=1,bool noequality=true);
 };
 
 #endif

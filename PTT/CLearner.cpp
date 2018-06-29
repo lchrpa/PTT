@@ -2082,10 +2082,12 @@ void CLearner::LearnMacrosFromStaticPreconditions()
 		  //matching arguments in a_j's add effects and static predicates from ref_act's precondition
 		  vector<sh_arg_str> sh_args_2;
 		  bool found=false;
+		  CPredicateList &realeffs=(*(*plan)[j]->GetPosEff())-(*(*plan)[j]->GetPrec());
+		  *stat = (*stat)-(*(*plan)[j]->GetPrec());
 		  
 		  for (int q1=0;q1<stat->Count();q1++){
-		    for (int q2=0;q2<(*plan)[j]->GetPosEff()->Count();q2++){
-		      (*stat)[q1]->GetPars()->DetectShared((*(*plan)[j]->GetPosEff())[q2]->GetPars(),sh_args_2);
+		    for (int q2=0;q2<realeffs.Count();q2++){
+		      (*stat)[q1]->GetPars()->DetectShared(realeffs[q2]->GetPars(),sh_args_2);
 		      if (!sh_args_2.empty()){found=true;sh_args_2.clear(); break;}
 		      
 		    }
@@ -2097,57 +2099,62 @@ void CLearner::LearnMacrosFromStaticPreconditions()
 		      (*plan)[j]->DetectSharedArgs(ref_act,*sh_args);
 		      ref_act = new CMacroAction((*plan)[j],ref_act,*sh_args);
 		     // cout << "considering ...." << ref_act->GetActName() << ref_act->GetParams()->ToString(false) << endl;
-		      stat = ref_act->GetPrec()->ExtractStatic();
+		     // stat = ref_act->GetPrec()->ExtractStatic();
 		      data.pdom->GetActions()->FindProperAction((*plan)[j]->GetActName(),s);
 		      macro= new CMacroAction((*data.pdom->GetActions())[s],macro,*sh_args, data.pdom->GetTypes());
-		      for (int w=first-1;w>j;w--) out_ma.push_front(w);
-		      first=j;
+		      
+		      for (int w=last-1;w>j;w--) if (find(in_ma.begin(),in_ma.end(),w)==in_ma.end()) out_ma.push_front(w);
+		      
+		     /// first=j;
 		      in_ma.push_front(j);
-		      break; //considering only two actions
+		     // break; //considering only two actions
+		      
+		      bool independent=true;
+		      while (independent && !out_ma.empty()) {//upwards
+		         deque<int>::iterator it_out=in_ma.begin(); 
+		         while (*it_out < out_ma.front() && independent){
+		            independent=(*plan)[out_ma.front()]->IndependentWith((*plan)[*it_out]) && !(*plan)[*it_out]->AchieverForGnd((*plan)[out_ma.front()]);
+			    it_out++;
+    		         }
+		         if (independent) out_ma.pop_front(); 
+		      }
+		      independent=true;
+		      while (independent && !out_ma.empty()) {//downwards
+		         deque<int>::reverse_iterator it_out=in_ma.rbegin(); 
+		         while (*it_out > out_ma.back() && independent){
+		             independent=(*plan)[out_ma.back()]->IndependentWith((*plan)[*it_out])  && !(*plan)[out_ma.back()]->AchieverForGnd((*plan)[*it_out]);
+			     it_out++;
+		         }
+		         if (independent) out_ma.pop_back(); 
+		      }
+		  
+		      if (!out_ma.empty()) break; //intermediate actions cannot be shifted away
+		  
+		      bool exists=false;
+		      vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
+		      while (!exists && mit !=sugg_macros.end()){
+		         if (strcasecmp(mit->first->GetActName().data(),macro->GetActName().data())==0){
+		             exists=true; 
+		             mit->second++;
+		             if (mit->first->GetParams()->Count()<macro->GetParams()->Count()) mit->first=macro;
+		         }
+		         //if (mit->first->Equal(macro)){found=true;mit->second++;}
+		         mit++; 
+		      }
+		      if (!exists){
+		         sugg_macros.push_back(make_pair<CAction*,int>(macro,1));
+		      }
+		      
 		  }
 		  
 		}
 		
 	      }
 	     
-	     if (in_ma.size()>1) {//macro candidate found
-		  bool independent=true;
-		  while (independent && !out_ma.empty()) {//upwards
-		      deque<int>::iterator it_out=in_ma.begin(); 
-		      while (*it_out < out_ma.front() && independent){
-		         independent=(*plan)[out_ma.front()]->IndependentWith((*plan)[*it_out]) && !(*plan)[*it_out]->AchieverForGnd((*plan)[out_ma.front()]);
-			 it_out++;
-		      }
-		      if (independent) out_ma.pop_front(); 
-		  }
-		  independent=true;
-		  while (independent && !out_ma.empty()) {//downwards
-		      deque<int>::reverse_iterator it_out=in_ma.rbegin(); 
-		      while (*it_out > out_ma.back() && independent){
-		         independent=(*plan)[out_ma.back()]->IndependentWith((*plan)[*it_out])  && !(*plan)[out_ma.back()]->AchieverForGnd((*plan)[*it_out]);
-			 it_out++;
-		      }
-		      if (independent) out_ma.pop_back(); 
-		  }
+	    // if (in_ma.size()>1) {//macro candidate found
 		  
-		  if (!out_ma.empty()) continue; //intermediate actions cannot be shifted away
 		  
-		  bool found=false;
-		  vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
-		  while (!found && mit !=sugg_macros.end()){
-		    if (strcasecmp(mit->first->GetActName().data(),macro->GetActName().data())==0){
-		       found=true; 
-		       mit->second++;
-		       if (mit->first->GetParams()->Count()<macro->GetParams()->Count()) mit->first=macro;
-		    }
-		    //if (mit->first->Equal(macro)){found=true;mit->second++;}
-		    mit++; 
-		  }
-		  if (!found){
-		    sugg_macros.push_back(make_pair<CAction*,int>(macro,1));
-		  }
-		  
-	   }
+	  // }
 	   
 	   
 	   }         

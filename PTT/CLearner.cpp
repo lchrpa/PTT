@@ -1873,6 +1873,7 @@ void CLearner::EliminateInfrequentMacros(int freq)
 	rem++;
 	continue;
       }
+      ((CMacroAction*) (*acts)[i])->DetermineInequalityConstraint();
   }
   
 }
@@ -1973,7 +1974,7 @@ void CLearner::LearnMacrosFromFlips(bool no_im_args)
 		  if (no_im_args && ref_act_2->GetParams()->Count()<ref_act->GetParams()->Count()) continue;
 		  
 		  //cout << "Macro: " << macro->GetActName() << macro->GetParams()->ToString(true) << endl;//debug reasons 
-		  /*
+		  
 		  for (int k=0;k<ref_act->GetPosEff()->Count();k++){
 		     if ((*it_prob)->GetGoal()->Find((*ref_act->GetPosEff())[k])!=-1){
 		    //    cout << "goal achiever: " <<  (*ref_act->GetPosEff())[k]->ToString(false) << endl; //debug reasons
@@ -1987,6 +1988,7 @@ void CLearner::LearnMacrosFromFlips(bool no_im_args)
 			//	ent_goal->AddRecord((*tmplist)[j]->Clone());
 			//}
 			
+			/*
 			//finding "connecting" initial entanglement
 			for (int q = 0;q<ref_act->GetPrec()->Count();q++){
 			  if (strcasecmp((*ref_act->GetPosEff())[k]->GetName().data(),(*ref_act->GetPrec())[q]->GetName().data())==0 && ref_act->GetNegEff()->Find((*ref_act->GetPrec())[q])!=-1){
@@ -2002,10 +2004,11 @@ void CLearner::LearnMacrosFromFlips(bool no_im_args)
 			    }
 			  }
 			}
+			*/
 		     }
 		     
 		  }
-		  */
+		  
 		  bool found=false;
 		  vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
 		  while (!found && mit !=sugg_macros.end()){
@@ -2022,10 +2025,23 @@ void CLearner::LearnMacrosFromFlips(bool no_im_args)
       }    
   }
   
-  for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
+  vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
+  while (mit!=sugg_macros.end()){
+     if (mit->second <  2* data.train->size() || ((CMacroAction*)mit->first)->IsUninformative()) {mit=sugg_macros.erase(mit);continue;}
+     for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=sugg_macros.end();mit2++){
+         if (mit!=mit2 && mit->first->GetActName()==mit2->first->GetActName())
+	   if (mit->first->GetPrec()->Count() < mit2->first->GetPrec()->Count() && mit->second<=mit2->second){
+	     mit=sugg_macros.erase(mit);continue;
+	  }
+     }
+     mit++;
+  }
+  
+
+//  for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
     //not enough macros w.r.t number of training plans
     // cout << mit->second << "x t Macro: " << mit->first->GetActName() << mit->first->GetPrec()->ToString(false) << endl;//debug reasons
-    if (mit->second <  2* data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() /*|| (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)*/) {mit=sugg_macros.erase(mit);mit--;continue;} 
+  //  if (mit->second <  2* data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() /*|| (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)*/) {mit=sugg_macros.erase(mit);mit--;continue;} 
     //"deconflicting" goal achievers 
     /*
     for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=mit;mit2++){
@@ -2040,9 +2056,9 @@ void CLearner::LearnMacrosFromFlips(bool no_im_args)
        }
     }
     */
-  }
+//  }
  
-  for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
+  for (mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
     ((CMacroAction*) mit->first)->DetermineInequalityConstraint();
     cout << mit->second << "x  Macro: " << mit->first->GetActName() << mit->first->GetParams()->ToString(true) << endl;//debug reasons
     //cout <<mit->first->GetPrec()->ToString(false) << endl;//debug reasons
@@ -2050,7 +2066,7 @@ void CLearner::LearnMacrosFromFlips(bool no_im_args)
     data.pdom->GetActions()->AddRecord(mit->first);
   }
   
-  //ApplyEntanglements(true,false);
+  ApplyEntanglements(true,false);
 
 }
 
@@ -2129,6 +2145,19 @@ void CLearner::LearnMacrosFromStaticPreconditions()
 		      }
 		  
 		      if (!out_ma.empty()) break; //intermediate actions cannot be shifted away
+		      
+		      for (int k=0;k<ref_act->GetPosEff()->Count();k++){
+			if ((*it_prob)->GetGoal()->Find((*ref_act->GetPosEff())[k])!=-1){
+		    //    cout << "goal achiever: " <<  (*ref_act->GetPosEff())[k]->ToString(false) << endl; //debug reasons
+			  string st="stag_";
+			  (*macro->GetPosEff())[k]->SetEntanglement(true);
+			  CPredicate *tmp = (*macro->GetPosEff())[k]->Clone();
+			  tmp->SetName(st+tmp->GetName());
+			  tmp->SetStatic(true);
+			  macro->GetPrec()->AddRecord(tmp);
+			}
+		      }
+			
 		  
 		      bool exists=false;
 		      vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
@@ -2162,35 +2191,28 @@ void CLearner::LearnMacrosFromStaticPreconditions()
 	  
    }
   
-  
-  for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
-    //not enough macros w.r.t number of training plans
-    // cout << mit->second << "x t Macro: " << mit->first->GetActName() << mit->first->GetPrec()->ToString(false) << endl;//debug reasons
-    if (mit->second < 2* data.train->size() || ((CMacroAction*)mit->first)->IsUninformative() /*|| (!mit->first->HasMeaningfulGoalEnt(1) && ((CMacroAction*)mit->first)->HasIntermediateAdditionalArgs()>1)*/) {mit=sugg_macros.erase(mit);mit--;continue;} 
-    //"deconflicting" goal achievers 
-    /*
-    for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=mit;mit2++){
-       if (mit->first->GetActName()==mit2->first->GetActName()){
-	  if (mit->first->GetParams()->Count() > mit2->first->GetParams()->Count()){
-	   //if (mit->second >= 2 * mit2->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
-	    cout << mit2->second << "params Macro: " << mit2->first->GetActName() << mit2->first->GetParams()->ToString(true) << endl;//debug reasons
-	 // } else {
-	  // if (mit2->second < 2 * mit->second) {mit2=sugg_macros.erase(mit2);mit2--;} else {mit=sugg_macros.erase(mit);mit--;break;}
-	   mit2=sugg_macros.erase(mit2);mit2--;mit=sugg_macros.begin();break; //erase macro with less goal ents 
+   vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
+   while (mit!=sugg_macros.end()){
+     if (mit->second <  2* data.train->size() || ((CMacroAction*)mit->first)->IsUninformative()) {mit=sugg_macros.erase(mit);continue;}
+     for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=sugg_macros.end();mit2++){
+         if (mit!=mit2 && mit->first->GetActName()==mit2->first->GetActName())
+	   if (mit->first->GetPrec()->Count() < mit2->first->GetPrec()->Count() && mit->second<=mit2->second){
+	     mit=sugg_macros.erase(mit);continue;
 	  }
-       }
-    }
-    */
+     }
+     mit++;
   }
+
  
   for (vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();mit!=sugg_macros.end();mit++){
     ((CMacroAction*) mit->first)->DetermineInequalityConstraint();
     cout << mit->second << "x  Macro: " << mit->first->GetActName() << mit->first->GetParams()->ToString(true) << endl;//debug reasons
-    //cout <<mit->first->GetPrec()->ToString(false) << endl;//debug reasons
+   // cout <<mit->first->GetPrec()->ToString(false) << endl;//debug reasons
     
     data.pdom->GetActions()->AddRecord(mit->first);
   }
   
+  ApplyEntanglements(true,false);
   
 }
 

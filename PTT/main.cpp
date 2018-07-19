@@ -555,7 +555,7 @@ int main(int argc, char** argv){
 		   //data.pdom->OutIncompatiblePreds(cout);
 		   //data.pdom->GetFlippingData();
 		   //data.pdom->OutFlippingData(cout);
-		  data.init=data.goal=true;
+		  data.goal=true;
 		  learn.LearnMacrosFromFlips(data.macrosx==11);
 		  DomainToPDDL();
 		  ProblemsToPDDL();
@@ -586,6 +586,24 @@ int main(int argc, char** argv){
 		  learn.Initialize();
 		  //data.init=data.goal=true;
 		 // cout << "Initialized"<<endl;
+		  data.goal=true;
+		  learn.LearnEntanglements();
+		  CActionList *acts = data.pdom->GetActions();
+                  for(int i=0;i<acts->Count();i++){
+		    if (!(*acts)[i]->isMacro()) continue;
+		    for (int k=0;k<(*acts)[i]->GetPosEff()->Count();k++){
+		    if ((*(*acts)[i]->GetPosEff())[k]->IsEntangled()){
+		    //    cout << "goal achiever: " <<  (*ref_act->GetPosEff())[k]->ToString(false) << endl; //debug reasons
+		        string st="stag_";
+			//(*macro->GetPosEff())[k]->SetEntanglement(true);
+		        CPredicate *tmp = (*(*acts)[i]->GetPosEff())[k]->Clone();
+			tmp->SetName(st+tmp->GetName());
+			tmp->SetStatic(true);
+			(*acts)[i]->GetPrec()->AddRecord(tmp);
+		    }
+		    }
+		    ((CMacroAction*)(*acts)[i])->DetermineInequalityConstraint();
+		  }
 		  learn.LearnMacrosFromStaticPreconditions();
 		  //cout << "Ents learnt"<<endl;
 	        //  learn.EliminateUselessMacros();

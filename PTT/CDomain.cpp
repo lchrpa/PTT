@@ -683,7 +683,7 @@ void CDomain::ImportMacros(list<mcr*>* macros)
 	   }
 	   cout << endl;
 	   */
-	   a = new CMacroAction(a,b,*sh_args);
+	   a = new CMacroAction(a,b,*sh_args,ptypes);
 	}
 	if (!((CMacroAction*)a)->IsUninformative() && new_mcrs->FindProperAction(a->GetActName(),i)==NULL){
 	  //cout << "Improting " << a->GetActName() << endl;

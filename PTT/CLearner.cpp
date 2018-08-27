@@ -514,8 +514,10 @@ void CLearner::CreateMatrixOfCandidates()
 					cell=this->matrix+n*a+b;
 					if (*(cell->unused_acts+i-1)==1&&*(cell->unused_acts+j-1)==1){ //no duplication of actions in the same field
 						vector<sh_arg_str> *temp=new vector<sh_arg_str>(*cell->shared_args);
+						vector<sh_arg_str> *temp2=new vector<sh_arg_str>();
+						(*tr_plan)[i-1]->DetectSharedArgs((*tr_plan)[j-1],*temp2);
 					        (*tr_plan)[i-1]->DetectSharedArgs((*tr_plan)[j-1],*cell->shared_args);
-						if (cell->shared_args->empty()) {cell->shared_args=temp;continue;}
+						if (cell->shared_args->size()<temp2->size() && cell->shared_args->size()<temp->size()) {cell->shared_args=temp;continue;}
 					        *(cell->unused_acts+i-1)=*(cell->unused_acts+j-1)=0;
 						cell->counter++;
 						pair.prob=k;
@@ -1504,6 +1506,7 @@ void CLearner::LearnMacrosFromCA(void)
 		(*data.pdom->GetActions())[zz]->GenerateStatGraph();
 		(*data.pdom->GetActions())[zz]->GenerateComponents();
 		com_cnt_ent.push_back((*data.pdom->GetActions())[zz]->ComponentCount());
+		if ((*data.pdom->GetActions())[zz]->isMacro()) com_cnt[zz]=(*data.pdom->GetActions())[zz]->ComponentCount(); //component count for imported macros with entanglements
 		cout << (*data.pdom->GetActions())[zz]->GetActName() << " - comp.no with ents: " << com_cnt_ent[zz] <<endl;
 	}
 	int max_macros=4; //hard...
@@ -1565,9 +1568,11 @@ void CLearner::LearnMacrosFromCA(void)
 			}
 			
 			((CMacroAction*)(*acts)[i])->FindActionPositions(acts,si,sj);
-			if (removal.find(i)!=removal.end()) {acts->Remove(i);(*(frequency+si))+=(*(frequency+i));(*(frequency+sj))+=(*(frequency+i));continue;}
+			cout << "Action: " << ((CMacroAction*)(*acts)[i])->GetActName()<< " -" << si << "," <<sj <<endl;
+			if (removal.find(i)!=removal.end()) {acts->Remove(i); if (!(*acts)[i]->isImported()){(*(frequency+si))+=(*(frequency+i));(*(frequency+sj))+=(*(frequency+i));}continue;}
 			if (*(frequency+i)==0) {acts->Remove(i);continue;}
-			if (com_cnt[i]>com_cnt[si] || com_cnt[i]>com_cnt[sj]){acts->Remove(i);continue;}
+			if ((*acts)[i]->isImported()) continue;
+			if (!(*acts)[i]->isImported() && (com_cnt[i]>com_cnt[si] || com_cnt[i]>com_cnt[sj])){acts->Remove(i);continue;}
 			if (com_cnt[i]<com_cnt[si]) {
 				removal.insert(si);
 			} else if ((*acts)[si]->isMacro() && *(frequency+i)<(*(frequency+si))) {
@@ -2027,7 +2032,7 @@ void CLearner::LearnMacrosFromFlips(bool no_im_args)
   
   vector<pair<CAction*,int> >::iterator mit=sugg_macros.begin();
   while (mit!=sugg_macros.end()){
-     if (mit->second <  2* data.train->size() || ((CMacroAction*)mit->first)->IsUninformative()) {mit=sugg_macros.erase(mit);continue;}
+     if (mit->second <   data.train->size() || ((CMacroAction*)mit->first)->IsUninformative()) {mit=sugg_macros.erase(mit);continue;}
      for (vector<pair<CAction*,int> >::iterator mit2=sugg_macros.begin();mit2!=sugg_macros.end();mit2++){
          if (mit!=mit2 && mit->first->GetActName()==mit2->first->GetActName())
 	   if (mit->first->GetPrec()->Count() < mit2->first->GetPrec()->Count() && mit->second<=mit2->second){

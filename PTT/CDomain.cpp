@@ -330,6 +330,17 @@ void CDomain::OutFlippingData(ostream& s)
   
 }
 
+void CDomain::DetermineSymmetricArgs()
+{
+    int n=pacts->Count();
+    for (int i=0;i<n;i++){
+        vector<sh_arg_str> *sh=new vector<sh_arg_str>();
+	(*pacts)[i]->SymmetricPars(*sh);
+	symmetric_args[i]=sh;
+    }
+}
+
+
 
 
 bool CDomain::AreInverse(CAction* a1, CAction* a2)
@@ -683,7 +694,7 @@ void CDomain::ImportMacros(list<mcr*>* macros)
 	   }
 	   cout << endl;
 	   */
-	   a = new CMacroAction(a,b,*sh_args,ptypes);
+	   a = new CMacroAction(a,b,*sh_args,ptypes,true);
 	}
 	if (!((CMacroAction*)a)->IsUninformative() && new_mcrs->FindProperAction(a->GetActName(),i)==NULL){
 	  //cout << "Improting " << a->GetActName() << endl;

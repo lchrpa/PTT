@@ -550,13 +550,13 @@ int main(int argc, char** argv){
 		    }
 		
 		}
-		if (data.macrosx==1 || data.macrosx==11){ //"flipping" macros
+		if (data.macrosx==1 || data.macrosx==5){ //"flipping" macros
 		   //data.pdom->IdentifyIncomaptiblePredicates();
 		   //data.pdom->OutIncompatiblePreds(cout);
 		   //data.pdom->GetFlippingData();
 		   //data.pdom->OutFlippingData(cout);
 		  data.goal=true;
-		  learn.LearnMacrosFromFlips(data.macrosx==11);
+		  learn.LearnMacrosFromFlips(data.macrosx==5);
 		  DomainToPDDL();
 		  ProblemsToPDDL();
 		}
@@ -574,6 +574,29 @@ int main(int argc, char** argv){
 	        //  learn.EliminateUselessMacros();
 		  learn.ApplyEntanglements(true);
 		  learn.EliminateInfrequentMacros(data.train->size()*2);
+		  DomainToPDDL();
+		  ProblemsToPDDL();
+		}
+		
+		if (data.entanglements&data.macrosx==15){
+		  cout << "importing macros"<< endl;
+		  data.pdom->ImportMacros(&mcr_stuff);
+		  cout << "imported macros"<< endl;
+		  dom->IdentifyStaticPredicates();
+		  learn.Initialize();
+		  //data.init=data.goal=true;
+		  cout << "Initialized"<<endl;
+		  //learn.LearnEntanglements();
+		  //cout << "Ents learnt"<<endl;
+	        //  learn.EliminateUselessMacros();
+		  //learn.ApplyEntanglements(true);
+		 // learn.EliminateInfrequentMacros(1);
+		  data.macroentanglements=1;
+		  learn.LearnMacrosFromCA();
+		  CActionList* acts=data.pdom->GetActions();
+		  for(int i=0;i<acts->Count();i++){
+                       if ((*acts)[i]->isMacro()) ((CMacroAction*) (*acts)[i])->DetermineInequalityConstraint();
+                  }
 		  DomainToPDDL();
 		  ProblemsToPDDL();
 		}

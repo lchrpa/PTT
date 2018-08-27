@@ -57,8 +57,10 @@ public:
 	bool InverseOps(CAction* o, vector<sh_arg_str>& sh_args);
 	bool ReplacableBy(CAction* o, vector<sh_arg_str>& sh_args);
 	bool Equal(CAction *a);
+	void SymmetricPars(vector<sh_arg_str>& sh_args);
 	virtual string ToString(void);
 	virtual inline bool isMacro(){return false;}
+	virtual inline bool isImported(){return false;}
 	void MakeIndirectEffects(void);
 	virtual inline CAction* FindPrimitiveForPredicate(CPredicate* p){return this;}
 	// static predicates considered, entanglements optionally considered
@@ -105,7 +107,7 @@ public:
 
 class CMacroAction : public CAction {
 public:
-	CMacroAction(CAction *a1,CAction *a2, vector<sh_arg_str> &sh_args, CTypes *types=NULL);
+	CMacroAction(CAction *a1,CAction *a2, vector<sh_arg_str> &sh_args, CTypes *types=NULL, bool imp=false);
 	~CMacroAction();
 protected:
 	CAction *first, *second;
@@ -113,9 +115,11 @@ protected:
 	CPredicateList* MS;
 	CPredicateList* CL;
 	bool threat;
+	bool imported;
 public:
 	bool VerifyValidity(CActionList* acts, CTypes* types, CLearner*);
 	virtual inline bool isMacro(){return true;}
+	virtual inline bool isImported(){return imported;}
 	virtual CAction* FindPrimitiveForPredicate(CPredicate* p);
 	virtual int ActCount(void);
 	vector<pair<string,vector<short> > >* Unfold(vector<short>*,bool init=false);

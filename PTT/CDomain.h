@@ -53,6 +53,7 @@ struct flipping_data {
 typedef pair<string, vector<short> > act;
 typedef pair<act*,vector<act*> > mcr;
 
+
 class CDomain{
 	
 private:
@@ -68,6 +69,7 @@ private:
 	vector<pair<short,vector<sh_arg_str>* > > incompatible_preds;
 	vector<flipping_data> flipping;
 	vector<flipping_data>::iterator flipping_iter;
+	vector<vector<sh_arg_str>* > symmetric_args;
 	void MergePredTypes(CPredicateList*);
 	bool action_cost;
 	int initial_inv_count,initial_pred_count;
@@ -114,6 +116,7 @@ public:
 	void ReformulateByInnerEntanglements(CPredicateList* ent_prev, CPredicateList* ent_succ);
 	void ImportMacros(list<mcr*> *macros);
 	void ReconstructEntanglements();
+	void DetermineSymmetricArgs();
 };
 
 

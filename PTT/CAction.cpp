@@ -275,6 +275,39 @@ bool CAction::Equal(CAction* a)
        return false;
 }
 
+//works for pairs of args
+void CAction::SymmetricPars(vector< sh_arg_str >& sh_args)
+{
+  CAction *a,*b;
+  int n=this->params->Count();
+  char tmp[10];
+  deque<string> tmp_pars;
+  for (int i=0;i<n;i++){    
+      sprintf(tmp,"p%i",i);
+      tmp_pars.push_back(tmp);
+  }
+  for (int i=0;i<n;i++)
+    for (int j=i+1;j<n;j++){
+      deque<string> tmp_pars1=tmp_pars;
+      deque<string> tmp_pars2=tmp_pars;
+      sprintf(tmp,"p%i",j);
+      tmp_pars2[i]=tmp;
+      sprintf(tmp,"p%i",i);
+      tmp_pars2[j]=tmp;
+      a=this->Instantiate(new CParameter(&tmp_pars1,true));
+      b=this->Instantiate(new CParameter(&tmp_pars2,true));
+      if (a->Equal(b)){
+	 sh_arg_str *x=new sh_arg_str();
+	 x->first=i;
+	 x->second=j;
+	 sh_args.push_back(*x);
+      }
+      delete a;
+      delete b;
+  }
+  
+}
+
 
 string CAction::ToString(void)
 {
@@ -554,13 +587,13 @@ bool CAction::IndependentWith(CAction* a)
 // CMacroAction Class
 //////////////////////////////////////////////////////////////////////
 
-CMacroAction::CMacroAction(CAction *a1, CAction *a2, vector<sh_arg_str> &sh_args, CTypes *types): MS(NULL)
+CMacroAction::CMacroAction(CAction *a1, CAction *a2, vector<sh_arg_str> &sh_args, CTypes *types, bool imp): MS(NULL)
 , CL(NULL)
 , threat(false)
 , uninformative(false)
 {
 	
-	
+	imported=imp;
 
 	first = a1;
 	second = a2;

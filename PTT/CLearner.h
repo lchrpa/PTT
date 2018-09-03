@@ -111,6 +111,8 @@ public:
 	void EliminateUselessMacros();
 	
 	void EliminateInfrequentMacros(int freq);
+	void EliminateUnusedOperators(bool opsonly = false);
+
 
         void LearnMacrosFromFlips(bool no_im_args = false);
 	void LearnMacrosFromAbsorbtions();

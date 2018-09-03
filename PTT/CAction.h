@@ -128,10 +128,11 @@ protected:
 	bool uninformative;
 private:
 	void Initialize(CTypes*);
+	
+public:
 	vector<string>* LinearizeActNames(void);
 	vector<CAction*>* LinearizeActs(void);
-public:
-	bool IsUninformative(void);
+        bool IsUninformative(void);
 	inline bool IsThreat(){return threat;}
 	int StatGraphMatch(void);
 	bool StatGraphConnect(void);

@@ -1569,10 +1569,10 @@ void CLearner::LearnMacrosFromCA(void)
 			
 			((CMacroAction*)(*acts)[i])->FindActionPositions(acts,si,sj);
 			cout << "Action: " << ((CMacroAction*)(*acts)[i])->GetActName()<< " -" << si << "," <<sj <<endl;
-			if (removal.find(i)!=removal.end()) {acts->Remove(i); if (!(*acts)[i]->isImported()){(*(frequency+si))+=(*(frequency+i));(*(frequency+sj))+=(*(frequency+i));}continue;}
+			if (removal.find(i)!=removal.end() && (data.macrosx!=65 || !(*acts)[i]->isImported())) {acts->Remove(i); if (!(*acts)[i]->isImported()){(*(frequency+si))+=(*(frequency+i));(*(frequency+sj))+=(*(frequency+i));}continue;}
 			if (*(frequency+i)==0) {acts->Remove(i);continue;}
 			if ((*acts)[i]->isImported()) continue;
-			if (!(*acts)[i]->isImported() && (com_cnt[i]>com_cnt[si] || com_cnt[i]>com_cnt[sj])){acts->Remove(i);continue;}
+			if (!(*acts)[i]->isImported() && (com_cnt[i]>com_cnt[si] || com_cnt[i]>com_cnt[sj])){acts->Remove(i);(*(frequency+si))+=(*(frequency+i));(*(frequency+sj))+=(*(frequency+i));continue;}
 			if (com_cnt[i]<com_cnt[si]) {
 				removal.insert(si);
 			} else if ((*acts)[si]->isMacro() && *(frequency+i)<(*(frequency+si))) {
@@ -1882,6 +1882,24 @@ void CLearner::EliminateInfrequentMacros(int freq)
   }
   
 }
+
+void CLearner::EliminateUnusedOperators(bool opsonly)
+{
+    CActionList *acts = data.pdom->GetActions();
+   int rem =0;
+   for(int i=0;i<acts->Count();i++){
+      //debug
+      cout << (*acts)[i]->GetActName() << ": " << *(frequency+i+rem) <<endl;
+      if (opsonly && (*acts)[i]->isMacro() ) continue;
+      if (*(frequency+i+rem)==0){
+	acts->Remove(i);
+	i--;
+	rem++;
+	continue;
+      }
+   }
+}
+
 
 
 void CLearner::LearnMacrosFromFlips(bool no_im_args)

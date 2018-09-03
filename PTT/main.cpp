@@ -560,6 +560,29 @@ int main(int argc, char** argv){
 		  DomainToPDDL();
 		  ProblemsToPDDL();
 		}
+		if (data.macrosx==51 || data.macrosx==55){ //"flipping" macros
+		   //data.pdom->IdentifyIncomaptiblePredicates();
+		   //data.pdom->OutIncompatiblePreds(cout);
+		   //data.pdom->GetFlippingData();
+		   //data.pdom->OutFlippingData(cout);
+		  learn.Initialize();
+		  data.goal=true;
+		  learn.LearnMacrosFromFlips(data.macrosx==55);
+		  //remove "flipping operators"
+		  int n=data.pdom->GetActions()->Count()-1;
+		  CActionList *acts=data.pdom->GetActions();
+		  while (n>=0&&(*acts)[n]->isMacro()){
+		    int i=0;
+		    vector<string> *tf=((CMacroAction*)(*acts)[n])->LinearizeActNames();
+		    acts->FindProperAction(tf->front(),i);
+		    if (i!=-1) {acts->Remove(i);n--;}
+		    acts->FindProperAction(tf->back(),i);
+		    if (i!=-1) {acts->Remove(i);n--;}
+		    n--;
+		  }
+		  DomainToPDDL();
+		  ProblemsToPDDL();
+		}
 		
 		if (data.entanglements&data.macrosx==10){
 		  cout << "importing macros"<< endl;
@@ -576,6 +599,23 @@ int main(int argc, char** argv){
 		  learn.EliminateInfrequentMacros(data.train->size()*2);
 		  DomainToPDDL();
 		  ProblemsToPDDL();
+		}
+		
+		if (data.macrosx==60){
+		  //cout << "importing macros"<< endl;
+		  //data.pdom->ImportMacros(&mcr_stuff);
+		  //cout << "imported macros"<< endl;
+		  //dom->IdentifyStaticPredicates();
+		  learn.Initialize();
+		  //data.init=data.goal=true;
+		  //cout << "Initialized"<<endl;
+		  learn.LearnEntanglements();
+		  //cout << "Ents learnt"<<endl;
+	        //  learn.EliminateUselessMacros();
+		  //learn.ApplyEntanglements(true);
+		  learn.EliminateUnusedOperators();
+		  DomainToPDDL();
+		  //ProblemsToPDDL();
 		}
 		
 		if (data.entanglements&data.macrosx==15){
@@ -597,6 +637,30 @@ int main(int argc, char** argv){
 		  for(int i=0;i<acts->Count();i++){
                        if ((*acts)[i]->isMacro()) ((CMacroAction*) (*acts)[i])->DetermineInequalityConstraint();
                   }
+		  DomainToPDDL();
+		  ProblemsToPDDL();
+		}
+		
+		if (data.entanglements&data.macrosx==65){
+		  cout << "importing macros"<< endl;
+		  data.pdom->ImportMacros(&mcr_stuff);
+		  cout << "imported macros"<< endl;
+		  dom->IdentifyStaticPredicates();
+		  learn.Initialize();
+		  //data.init=data.goal=true;
+		  cout << "Initialized"<<endl;
+		  //learn.LearnEntanglements();
+		  //cout << "Ents learnt"<<endl;
+	        //  learn.EliminateUselessMacros();
+		  //learn.ApplyEntanglements(true);
+		 // learn.EliminateInfrequentMacros(1);
+		  data.macroentanglements=1;
+		  learn.LearnMacrosFromCA();
+		  CActionList* acts=data.pdom->GetActions();
+		  for(int i=0;i<acts->Count();i++){
+                       if ((*acts)[i]->isMacro()) ((CMacroAction*) (*acts)[i])->DetermineInequalityConstraint();
+                  }
+                  learn.EliminateUnusedOperators(true);
 		  DomainToPDDL();
 		  ProblemsToPDDL();
 		}
